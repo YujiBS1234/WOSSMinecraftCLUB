@@ -684,11 +684,11 @@
 
       <div class="tile-card server-card">
         <div style="font-size:0.75rem; font-weight:700; color:var(--mc-diamond); text-transform:uppercase;">Minecraft SMP</div>
-        <h3 style="font-size:1.25rem; margin:0.4rem 0;">mc.wossgaming.ca</h3>
+        <h3 style="font-size:1.25rem; margin:0.4rem 0;" id="server-ip-display">mc.wossgaming.ca</h3>
         <p style="color:var(--text-muted); font-size:0.88rem;">Vanilla+ survival realm with CoreProtect anti-griefing and student towns.</p>
         <div class="interactive-pill">
-          <code>mc.wossgaming.ca</code>
-          <button class="copy-pill-btn" onclick="copyValue('mc.wossgaming.ca', 'Server IP copied!')">
+          <code id="server-ip-copy">mc.wossgaming.ca</code>
+          <button class="copy-pill-btn" id="server-ip-copy-btn" onclick="copyValue('mc.wossgaming.ca', 'Server IP copied!')">
             📋 Copy IP
           </button>
         </div>
@@ -848,6 +848,18 @@
       // Update Discord links
       const discordLinks = document.querySelectorAll('a[href*="discord.gg"]');
       discordLinks.forEach(el => el.href = clubData.discordInvite);
+      
+      // Update Server IP display
+      const serverIPDisplay = document.getElementById("server-ip-display");
+      if (serverIPDisplay) serverIPDisplay.textContent = clubData.serverIP;
+      
+      // Update Server IP copy pill
+      const serverIPCopy = document.getElementById("server-ip-copy");
+      if (serverIPCopy) serverIPCopy.textContent = clubData.serverIP;
+      
+      // Update Server IP copy button
+      const serverIPCopyBtn = document.getElementById("server-ip-copy-btn");
+      if (serverIPCopyBtn) serverIPCopyBtn.onclick = () => copyValue(clubData.serverIP, 'Server IP copied!');
     }
 
     function saveClubData() {
