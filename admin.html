@@ -530,7 +530,7 @@
           🌐 PUBLIC SITE SETTINGS (Syncs to Homepage)
         </h3>
         <p class="card-subtitle">Update links and codes that appear on the public website. Changes sync instantly via Firebase.</p>
-        <form onsubmit="handleUpdateClubData(event)">
+        <form onsubmit="handleUpdateClubData(event, 'superAdmin')">
           <div class="form-grid-2">
             <div class="form-group">
               <label>Google Classroom Code</label>
@@ -1040,7 +1040,7 @@
           🌐 SITE LINKS & CODES (Syncs to Homepage)
         </h3>
         <p class="card-subtitle">Update links and codes that appear on the public website. Changes sync instantly via Firebase.</p>
-        <form onsubmit="handleUpdateClubData(event)">
+        <form onsubmit="handleUpdateClubData(event, 'settings')">
           <div class="form-grid-2">
             <div class="form-group">
               <label>Google Classroom Code</label>
@@ -1307,18 +1307,26 @@
             fetchGoogleFormResponses();
           });
 
-          // Club data (public site settings)
+          // Club data (public site settings) - populate both forms
           db.ref("club_data").on("value", (snapshot) => {
             const data = snapshot.val();
             if (data) {
-              const classroomCode = document.getElementById("clubClassroomCode");
-              const discordInvite = document.getElementById("clubDiscordInvite");
-              const serverIP = document.getElementById("clubServerIP");
-              const serverName = document.getElementById("clubServerName");
-              if (classroomCode) classroomCode.value = data.classroomCode || "4q5coqr4";
-              if (discordInvite) discordInvite.value = data.discordInvite || "https://discord.gg/jx3VNFyru";
-              if (serverIP) serverIP.value = data.serverIP || "mc.wossgaming.ca";
-              if (serverName) serverName.value = data.serverName || "WOSS SMP Realm";
+              const forms = [
+                { classroomCode: 'clubClassroomCode', discordInvite: 'clubDiscordInvite', serverIP: 'clubServerIP', serverName: 'clubServerName' },
+                { classroomCode: 'settingsClubClassroomCode', discordInvite: 'settingsClubDiscordInvite', serverIP: 'settingsClubServerIP', serverName: 'settingsClubServerName' }
+              ];
+              
+              forms.forEach(form => {
+                const codeEl = document.getElementById(form.classroomCode);
+                const discordEl = document.getElementById(form.discordInvite);
+                const ipEl = document.getElementById(form.serverIP);
+                const nameEl = document.getElementById(form.serverName);
+                
+                if (codeEl) codeEl.value = data.classroomCode || "4q5coqr4";
+                if (discordEl) discordEl.value = data.discordInvite || "https://discord.gg/jx3VNFyru";
+                if (ipEl) ipEl.value = data.serverIP || "mc.wossgaming.ca";
+                if (nameEl) nameEl.value = data.serverName || "WOSS SMP Realm";
+              });
             }
           });
 
@@ -1585,12 +1593,12 @@
       if (viewId === 'techView') { updateCmdPreview(); renderApprovedWhitelistTable(); }
       if (viewId === 'socialView') renderSocialLinks();
       if (viewId === 'clubDataView') {
-        // Load club data into form
+        // Load club data into settings form
         const clubData = JSON.parse(localStorage.getItem('woss_club_data') || '{}');
-        if (clubData.classroomCode) document.getElementById('clubClassroomCode').value = clubData.classroomCode;
-        if (clubData.discordInvite) document.getElementById('clubDiscordInvite').value = clubData.discordInvite;
-        if (clubData.serverIP) document.getElementById('clubServerIP').value = clubData.serverIP;
-        if (clubData.serverName) document.getElementById('clubServerName').value = clubData.serverName;
+        if (clubData.classroomCode) document.getElementById('settingsClubClassroomCode').value = clubData.classroomCode;
+        if (clubData.discordInvite) document.getElementById('settingsClubDiscordInvite').value = clubData.discordInvite;
+        if (clubData.serverIP) document.getElementById('settingsClubServerIP').value = clubData.serverIP;
+        if (clubData.serverName) document.getElementById('settingsClubServerName').value = clubData.serverName;
       }
     }
 
@@ -2254,12 +2262,17 @@ ${desc}`;
       }
     }
 
-    function handleUpdateClubData(e) {
+    function handleUpdateClubData(e, formId) {
       e.preventDefault();
-      const classroomCode = document.getElementById("clubClassroomCode").value.trim();
-      const discordInvite = document.getElementById("clubDiscordInvite").value.trim();
-      const serverIP = document.getElementById("clubServerIP").value.trim();
-      const serverName = document.getElementById("clubServerName").value.trim();
+      
+      // Determine which form to read from
+      const isSettingsForm = formId === 'settings';
+      const prefix = isSettingsForm ? 'settingsClub' : 'club';
+      
+      const classroomCode = document.getElementById(prefix + "ClassroomCode").value.trim();
+      const discordInvite = document.getElementById(prefix + "DiscordInvite").value.trim();
+      const serverIP = document.getElementById(prefix + "ServerIP").value.trim();
+      const serverName = document.getElementById(prefix + "ServerName").value.trim();
 
       if (!classroomCode || !discordInvite || !serverIP || !serverName) {
         showToast("Error: All fields are required!");
@@ -2276,13 +2289,36 @@ ${desc}`;
       if (db) {
         db.ref("club_data").set(clubData).then(() => {
           showToast("Public site settings updated & synced! ☁️");
+          // Also update the other form to keep them in sync
+          syncClubDataForms(clubData);
         }).catch(err => {
           console.error(err);
           fallbackLocalClubData(clubData);
         });
       } else {
         fallbackLocalClubData(clubData);
+        syncClubDataForms(clubData);
       }
+    }
+
+    function syncClubDataForms(clubData) {
+      // Update both forms to keep them in sync
+      const forms = [
+        { prefix: 'club', classroomCode: 'clubClassroomCode', discordInvite: 'clubDiscordInvite', serverIP: 'clubServerIP', serverName: 'clubServerName' },
+        { prefix: 'settingsClub', classroomCode: 'settingsClubClassroomCode', discordInvite: 'settingsClubDiscordInvite', serverIP: 'settingsClubServerIP', serverName: 'settingsClubServerName' }
+      ];
+      
+      forms.forEach(form => {
+        const codeEl = document.getElementById(form.classroomCode);
+        const discordEl = document.getElementById(form.discordInvite);
+        const ipEl = document.getElementById(form.serverIP);
+        const nameEl = document.getElementById(form.serverName);
+        
+        if (codeEl) codeEl.value = clubData.classroomCode;
+        if (discordEl) discordEl.value = clubData.discordInvite;
+        if (ipEl) ipEl.value = clubData.serverIP;
+        if (nameEl) nameEl.value = clubData.serverName;
+      });
     }
 
     function fallbackLocalClubData(clubData) {
