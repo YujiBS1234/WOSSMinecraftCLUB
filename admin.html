@@ -1310,6 +1310,7 @@
           // Club data (public site settings) - populate both forms
           db.ref("club_data").on("value", (snapshot) => {
             const data = snapshot.val();
+            console.log("[ClubData] Firebase listener fired, data:", data);
             if (data) {
               const forms = [
                 { classroomCode: 'clubClassroomCode', discordInvite: 'clubDiscordInvite', serverIP: 'clubServerIP', serverName: 'clubServerName' },
@@ -1322,11 +1323,14 @@
                 const ipEl = document.getElementById(form.serverIP);
                 const nameEl = document.getElementById(form.serverName);
                 
+                console.log("[ClubData] Populating form:", form.classroomCode, "found:", !!codeEl);
                 if (codeEl) codeEl.value = data.classroomCode || "4q5coqr4";
                 if (discordEl) discordEl.value = data.discordInvite || "https://discord.gg/jx3VNFyru";
                 if (ipEl) ipEl.value = data.serverIP || "mc.wossgaming.ca";
                 if (nameEl) nameEl.value = data.serverName || "WOSS SMP Realm";
               });
+            } else {
+              console.log("[ClubData] No data in Firebase, using defaults");
             }
           });
 
@@ -2263,6 +2267,7 @@ ${desc}`;
     }
 
     function handleUpdateClubData(e, formId) {
+      console.log("[ClubData] Save called with formId:", formId);
       e.preventDefault();
       
       // Determine which form to read from
@@ -2273,6 +2278,8 @@ ${desc}`;
       const discordInvite = document.getElementById(prefix + "DiscordInvite").value.trim();
       const serverIP = document.getElementById(prefix + "ServerIP").value.trim();
       const serverName = document.getElementById(prefix + "ServerName").value.trim();
+
+      console.log("[ClubData] Read values:", { classroomCode, discordInvite, serverIP, serverName });
 
       if (!classroomCode || !discordInvite || !serverIP || !serverName) {
         showToast("Error: All fields are required!");
@@ -2286,16 +2293,20 @@ ${desc}`;
         serverName
       };
 
+      console.log("[ClubData] Firebase db status:", db ? "connected" : "null");
+
       if (db) {
         db.ref("club_data").set(clubData).then(() => {
+          console.log("[ClubData] Firebase write successful");
           showToast("Public site settings updated & synced! ☁️");
-          // Also update the other form to keep them in sync
           syncClubDataForms(clubData);
         }).catch(err => {
-          console.error(err);
+          console.error("[ClubData] Firebase write error:", err);
+          showToast("Firebase save failed. Check console (F12).");
           fallbackLocalClubData(clubData);
         });
       } else {
+        console.log("[ClubData] Firebase not connected, using localStorage");
         fallbackLocalClubData(clubData);
         syncClubDataForms(clubData);
       }
@@ -2322,6 +2333,7 @@ ${desc}`;
     }
 
     function fallbackLocalClubData(clubData) {
+      console.log("[ClubData] Fallback to localStorage:", clubData);
       try {
         localStorage.setItem("woss_club_data", JSON.stringify(clubData));
         showToast("Settings saved locally! 💾");
