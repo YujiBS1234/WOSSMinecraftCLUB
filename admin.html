@@ -298,6 +298,69 @@
     @media (max-width: 768px) {
       .form-grid-2, .form-grid-3 { grid-template-columns: 1fr; }
     }
+
+    /* =========================================================
+       ADMIN PANEL NAVIGATION TABS
+       ========================================================= */
+    .admin-nav {
+      display: none;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      padding: 1rem 0;
+      border-bottom: 1px solid var(--border-subtle);
+      margin-bottom: 1.5rem;
+    }
+
+    .admin-nav.show {
+      display: flex;
+    }
+
+    .admin-nav-btn {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-subtle);
+      border-radius: 6px;
+      padding: 0.6rem 1rem;
+      color: var(--text-muted);
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      font-size: 0.75rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .admin-nav-btn:hover {
+      border-color: var(--mc-green);
+      color: var(--mc-green);
+      background: var(--bg-surface-elevated);
+    }
+
+    .admin-nav-btn.active {
+      background: var(--mc-green);
+      border-color: var(--mc-green);
+      color: #fff;
+    }
+
+    .admin-nav-btn .nav-icon {
+      font-size: 1rem;
+    }
+
+    /* View content sections */
+    .admin-view {
+      display: none;
+    }
+
+    .admin-view.active {
+      display: block;
+      animation: fadeIn 0.2s ease;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(8px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
   </style>
 </head>
 <body>
@@ -321,6 +384,17 @@
           </button>
         </div>
       </div>
+    </div>
+
+    <!-- Admin Navigation (shown after login) -->
+    <div class="admin-nav container" id="adminNav">
+      <button class="admin-nav-btn active" data-view="superAdminView" onclick="showAdminView('superAdminView')"><span class="nav-icon">👑</span> Executive Command</button>
+      <button class="admin-nav-btn" data-view="supervisorView" onclick="showAdminView('supervisorView')"><span class="nav-icon">📋</span> Supervisor Radar</button>
+      <button class="admin-nav-btn" data-view="logisticsView" onclick="showAdminView('logisticsView')"><span class="nav-icon">📑</span> Logistics Desk</button>
+      <button class="admin-nav-btn" data-view="eventsView" onclick="showAdminView('eventsView')"><span class="nav-icon">🏆</span> Events</button>
+      <button class="admin-nav-btn" data-view="socialView" onclick="showAdminView('socialView')"><span class="nav-icon">📱</span> Social Media</button>
+      <button class="admin-nav-btn" data-view="techView" onclick="showAdminView('techView')"><span class="nav-icon">⚙️</span> Server Tech</button>
+      <button class="admin-nav-btn" data-view="clubDataView" onclick="showAdminView('clubDataView')"><span class="nav-icon">🌐</span> Site Settings</button>
     </div>
   </header>
 
@@ -376,7 +450,7 @@
         <form onsubmit="handleEmailOtpRequest(event)">
           <div class="form-group">
             <label>Registered Staff Email</label>
-            <input type="email" id="emailOtpInput" class="admin-input" placeholder="e.g. 1dronamraven@hdsb.ca" required>
+            <input type="email" id="emailOtpInput" class="admin-input" placeholder="your@hdsb.ca" required>
           </div>
 
           <div class="form-group">
@@ -431,7 +505,7 @@
     </div>
 
     <!-- ================= VIEW 1: SUPER ADMIN, FOUNDER & VP COMMAND ================= -->
-    <div id="superAdminView" style="display: none;">
+    <div id="superAdminView" class="admin-view" style="display: none;">
       <div class="card" style="border-left: 4px solid var(--mc-gold);">
         <h2 id="highRoleHeader" class="pixel-title" style="font-size: 1.05rem; color: var(--mc-gold); margin-bottom: 0.3rem;">
           EXECUTIVE MASTER COMMAND
@@ -588,7 +662,7 @@
     </div>
 
     <!-- ================= VIEW 2: SUPERVISOR (ROLE STATUS RADAR & WORK CHECKLIST) ================= -->
-    <div id="supervisorView" style="display: none;">
+    <div id="supervisorView" class="admin-view" style="display: none;">
       <div class="card" style="border-left: 4px solid var(--mc-blue);">
         <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:0.8rem; margin-bottom:1rem;">
           <div>
@@ -628,7 +702,7 @@
     </div>
 
     <!-- ================= VIEW 3: LOGISTICS (CLEAN GOOGLE FORMS REVIEW HUB) ================= -->
-    <div id="logisticsView" style="display: none;">
+    <div id="logisticsView" class="admin-view" style="display: none;">
       <div class="card" style="border-left: 4px solid var(--mc-green);">
         <h2 class="pixel-title" style="font-size: 1.05rem; color: var(--mc-green); margin-bottom: 0.3rem;">
           📑 CLUB LOGISTICS & GOOGLE FORMS REVIEW DESK
@@ -691,7 +765,7 @@
     </div>
 
     <!-- ================= VIEW 4: EVENT COORDINATOR ================= -->
-    <div id="eventsView" style="display: none;">
+    <div id="eventsView" class="admin-view" style="display: none;">
       <div class="card" style="border-left: 4px solid var(--mc-purple);">
         <h2 class="pixel-title" style="font-size: 1.05rem; color: var(--mc-purple); margin-bottom: 0.3rem;">
           🏆 EVENT & TOURNAMENT COORDINATION
@@ -806,7 +880,7 @@
     </div>
 
     <!-- ================= VIEW 5: SOCIAL MEDIA & PR ================= -->
-    <div id="socialView" style="display: none;">
+    <div id="socialView" class="admin-view" style="display: none;">
       <div class="card" style="border-left: 4px solid var(--mc-pink);">
         <h2 class="pixel-title" style="font-size: 1.05rem; color: var(--mc-pink); margin-bottom: 0.3rem;">
           📱 SOCIAL MEDIA & PR COMMAND HUB
@@ -892,7 +966,7 @@
     </div>
 
     <!-- ================= VIEW 6: SERVER TECH LEAD ================= -->
-    <div id="techView" style="display: none;">
+    <div id="techView" class="admin-view" style="display: none;">
       <div class="card" style="border-left: 4px solid var(--mc-diamond);">
         <h2 class="pixel-title" style="font-size: 1.05rem; color: var(--mc-diamond); margin-bottom: 0.3rem;">
           ⚙️ SERVER OPERATIONS & TECH LEAD
@@ -952,7 +1026,47 @@
 
   </div>
 
-  <!-- Toast -->
+    <!-- ================= VIEW 7: SITE SETTINGS ================= -->
+    <div id="clubDataView" class="admin-view" style="display: none;">
+      <div class="card" style="border-left: 4px solid var(--mc-diamond);">
+        <h2 class="pixel-title" style="font-size: 1.05rem; color: var(--mc-diamond); margin-bottom: 0.3rem;">
+          🌐 PUBLIC SITE SETTINGS
+        </h2>
+        <p style="color:var(--text-muted); font-size:0.85rem;">Manage links and codes that appear on the public website. Changes sync instantly via Firebase to all visitors.</p>
+      </div>
+
+      <div class="card" style="border-left: 4px solid var(--mc-diamond);">
+        <h3 class="card-title pixel-title" style="color:var(--mc-diamond); font-size:0.85rem;">
+          🌐 SITE LINKS & CODES (Syncs to Homepage)
+        </h3>
+        <p class="card-subtitle">Update links and codes that appear on the public website. Changes sync instantly via Firebase.</p>
+        <form onsubmit="handleUpdateClubData(event)">
+          <div class="form-grid-2">
+            <div class="form-group">
+              <label>Google Classroom Code</label>
+              <input type="text" id="clubClassroomCode" class="admin-input" value="4q5coqr4" required>
+            </div>
+            <div class="form-group">
+              <label>Discord Invite Link</label>
+              <input type="url" id="clubDiscordInvite" class="admin-input" value="https://discord.gg/jx3VNFyru" required>
+            </div>
+          </div>
+          <div class="form-grid-2">
+            <div class="form-group">
+              <label>Server IP / Address</label>
+              <input type="text" id="clubServerIP" class="admin-input" value="mc.wossgaming.ca" required>
+            </div>
+            <div class="form-group">
+              <label>Server Display Name</label>
+              <input type="text" id="clubServerName" class="admin-input" value="WOSS SMP Realm" required>
+            </div>
+          </div>
+          <button type="submit" class="mc-btn gold" style="margin-top: 0.5rem;">SAVE & SYNC TO HOMEPAGE ☁️</button>
+        </form>
+      </div>
+    </div>
+
+  </div>
   <div id="chat-toast">
     <span style="color:var(--mc-diamond);">&lt;Terminal&gt;</span> <span id="toastMsg">Ready</span>
   </div>
@@ -1336,11 +1450,13 @@
       const twoFactorView = document.getElementById("twoFactorView");
       const logoutBtn = document.getElementById("logoutBtn");
       const badgeSlot = document.getElementById("roleBadgeSlot");
+      const adminNav = document.getElementById("adminNav");
 
       if (isAuth && userRole) {
         if (loginView) loginView.style.display = "none";
         if (twoFactorView) twoFactorView.style.display = "none";
         if (logoutBtn) logoutBtn.style.display = "inline-flex";
+        if (adminNav) adminNav.classList.add("show");
         if (badgeSlot) {
           badgeSlot.innerHTML = `<span class="role-badge role-${getRoleClass(userRole)}">${getRoleEmoji(userRole)} ${userRole} (${userName})</span>`;
         }
@@ -1349,6 +1465,7 @@
         if (loginView) loginView.style.display = "block";
         if (twoFactorView) twoFactorView.style.display = "none";
         if (logoutBtn) logoutBtn.style.display = "none";
+        if (adminNav) adminNav.classList.remove("show");
         if (badgeSlot) badgeSlot.innerHTML = "";
         hideAllRolePages();
       }
@@ -1381,18 +1498,7 @@
 
     /* SAFE HIDE: Never crashes if an ID is missing */
     function hideAllRolePages() {
-      const pageIds = [
-        "superAdminView",
-        "supervisorView",
-        "logisticsView",
-        "eventsView",
-        "socialView",
-        "techView"
-      ];
-      pageIds.forEach(id => {
-        const el = document.getElementById(id);
-        if (el) el.style.display = "none";
-      });
+      document.querySelectorAll('.admin-view').forEach(el => el.classList.remove('active'));
     }
 
     /* SAFE SHOW: Renders specific role dashboard without null errors */
@@ -1402,7 +1508,7 @@
 
       const showEl = (id) => {
         const el = document.getElementById(id);
-        if (el) el.style.display = "block";
+        if (el) el.classList.add('active');
         return el;
       };
 
@@ -1447,7 +1553,7 @@
       hideAllRolePages();
       const showEl = (id) => {
         const el = document.getElementById(id);
-        if (el) el.style.display = "block";
+        if (el) el.classList.add('active');
       };
 
       if (roleKey === 'admin') showEl("superAdminView");
@@ -1457,6 +1563,35 @@
       if (roleKey === 'logistics') { showEl("logisticsView"); fetchGoogleFormResponses(); renderApprovedWhitelistTable(); }
       if (roleKey === 'tech') { showEl("techView"); updateCmdPreview(); renderApprovedWhitelistTable(); }
       showToast(`Switched view to ${roleKey.toUpperCase()}`);
+    }
+
+    /* =========================================================
+       ADMIN NAVIGATION (Tab Bar)
+       ========================================================= */
+    function showAdminView(viewId) {
+      document.querySelectorAll('.admin-view').forEach(el => el.classList.remove('active'));
+      document.querySelectorAll('.admin-nav-btn').forEach(btn => btn.classList.remove('active'));
+
+      const view = document.getElementById(viewId);
+      if (view) view.classList.add('active');
+
+      const btn = document.querySelector(`.admin-nav-btn[data-view="${viewId}"]`);
+      if (btn) btn.classList.add('active');
+
+      // Trigger specific view initialization
+      if (viewId === 'supervisorView') renderSupervisorTasks();
+      if (viewId === 'eventsView') updateBracketTeams();
+      if (viewId === 'logisticsView') { fetchGoogleFormResponses(); renderApprovedWhitelistTable(); }
+      if (viewId === 'techView') { updateCmdPreview(); renderApprovedWhitelistTable(); }
+      if (viewId === 'socialView') renderSocialLinks();
+      if (viewId === 'clubDataView') {
+        // Load club data into form
+        const clubData = JSON.parse(localStorage.getItem('woss_club_data') || '{}');
+        if (clubData.classroomCode) document.getElementById('clubClassroomCode').value = clubData.classroomCode;
+        if (clubData.discordInvite) document.getElementById('clubDiscordInvite').value = clubData.discordInvite;
+        if (clubData.serverIP) document.getElementById('clubServerIP').value = clubData.serverIP;
+        if (clubData.serverName) document.getElementById('clubServerName').value = clubData.serverName;
+      }
     }
 
     /* =========================================================
