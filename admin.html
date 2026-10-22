@@ -1,0 +1,2469 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Staff Command Terminal | WOSS Minecraft Club</title>
+
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Press+Start+2P&family=VT323&display=swap" rel="stylesheet">
+
+  <!-- Firebase SDK for Multi-Device Cloud Sync -->
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+
+  <!-- EmailJS SDK for Live Real Email Delivery -->
+  <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
+
+  <style>
+    :root {
+      --bg-dark: #0a0d14;
+      --bg-surface: #121824;
+      --bg-surface-elevated: #1a2332;
+      --mc-green: #48bb28;
+      --mc-diamond: #4deeea;
+      --mc-gold: #f59e0b;
+      --mc-red: #ef4444;
+      --mc-purple: #a855f7;
+      --mc-pink: #ec4899;
+      --mc-blue: #3b82f6;
+      --text-main: #f8fafc;
+      --text-muted: #94a3b8;
+      --border-subtle: rgba(255, 255, 255, 0.08);
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    input, textarea, select { user-select: text !important; -webkit-user-select: text !important; }
+    body {
+      background-color: var(--bg-dark);
+      color: var(--text-main);
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .pixel-title {
+      font-family: 'Press Start 2P', monospace;
+      letter-spacing: -0.5px;
+      text-transform: uppercase;
+      line-height: 1.4;
+    }
+
+    .container {
+      max-width: 1080px;
+      margin: 0 auto;
+      padding: 1.8rem 1.5rem;
+      width: 100%;
+    }
+
+    /* Tabs for Login */
+    .tab-btn-row {
+      display: flex;
+      border-bottom: 2px solid var(--border-subtle);
+      margin-bottom: 1.5rem;
+      gap: 0.5rem;
+    }
+
+    .tab-btn {
+      flex: 1;
+      background: transparent;
+      border: none;
+      color: var(--text-muted);
+      font-family: 'Press Start 2P', monospace;
+      font-size: 0.55rem;
+      padding: 0.75rem 0.5rem;
+      cursor: pointer;
+      border-bottom: 2px solid transparent;
+      margin-bottom: -2px;
+      transition: all 0.15s ease;
+      line-height: 1.5;
+    }
+    .tab-btn:hover { color: #fff; }
+    .tab-btn.active { color: var(--mc-gold); border-bottom: 2px solid var(--mc-gold); }
+
+    /* Minecraft Buttons */
+    .mc-btn {
+      cursor: pointer;
+      font-family: 'Press Start 2P', monospace;
+      font-size: 0.62rem;
+      color: #fff;
+      background: #3b424a;
+      padding: 0.7rem 1.1rem;
+      border: none;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.4rem;
+      text-shadow: 2px 2px 0px #181b20;
+      box-shadow: inset 3px 3px 0px #636d7a, inset -3px -3px 0px #1a1e24, 0 4px 0px #090b0e;
+      transition: all 0.08s ease;
+      border-radius: 2px;
+    }
+    .mc-btn:hover { background: #464f59; transform: translateY(-2px); }
+    .mc-btn:active { transform: translateY(3px); }
+    .mc-btn.green { background: #2b7a1c; box-shadow: inset 3px 3px 0px #4ec734, inset -3px -3px 0px #16460d, 0 4px 0px #090b0e; }
+    .mc-btn.gold { background: #b45309; box-shadow: inset 3px 3px 0px #f59e0b, inset -3px -3px 0px #78350f, 0 4px 0px #090b0e; }
+    .mc-btn.red { background: #991b1b; box-shadow: inset 3px 3px 0px #ef4444, inset -3px -3px 0px #450a0a, 0 4px 0px #090b0e; }
+    .mc-btn.purple { background: #7e22ce; box-shadow: inset 3px 3px 0px #c084fc, inset -3px -3px 0px #581c87, 0 4px 0px #090b0e; }
+    .mc-btn.pink { background: #db2777; box-shadow: inset 3px 3px 0px #f472b6, inset -3px -3px 0px #9d174d, 0 4px 0px #090b0e; }
+    .mc-btn.blue { background: #1d4ed8; box-shadow: inset 3px 3px 0px #60a5fa, inset -3px -3px 0px #1e40af, 0 4px 0px #090b0e; }
+
+    header {
+      background: rgba(10, 13, 20, 0.95);
+      border-bottom: 2px solid var(--border-subtle);
+      padding: 0.9rem 0;
+    }
+    .nav-flex { display: flex; justify-content: space-between; align-items: center; }
+
+    .card {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-subtle);
+      border-radius: 8px;
+      padding: 1.8rem;
+      margin-bottom: 1.8rem;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.4);
+    }
+    .card-title {
+      font-size: 1rem;
+      margin-bottom: 0.4rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    .card-subtitle { color: var(--text-muted); font-size: 0.85rem; margin-bottom: 1.4rem; }
+
+    .form-group { margin-bottom: 1.2rem; }
+    .form-group label {
+      display: block;
+      font-size: 0.8rem;
+      font-weight: 700;
+      color: var(--mc-diamond);
+      margin-bottom: 0.4rem;
+      text-transform: uppercase;
+    }
+    .admin-input {
+      width: 100%;
+      background: #06080d;
+      border: 1px solid #293448;
+      color: #fff;
+      font-family: inherit;
+      padding: 0.8rem;
+      border-radius: 4px;
+      font-size: 0.92rem;
+      outline: none;
+    }
+    .admin-input:focus { border-color: var(--mc-green); }
+
+    .otp-input {
+      letter-spacing: 12px;
+      font-size: 1.8rem;
+      font-family: 'Press Start 2P', monospace;
+      text-align: center;
+      padding: 1rem;
+      color: var(--mc-gold);
+    }
+
+    .form-grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+    .form-grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1rem; }
+
+    /* Role Badges */
+    .role-badge {
+      display: inline-block;
+      font-size: 0.65rem;
+      font-weight: 800;
+      padding: 0.25rem 0.6rem;
+      border-radius: 4px;
+      text-transform: uppercase;
+    }
+    .role-founder { background: linear-gradient(135deg, rgba(245, 158, 11, 0.3), rgba(239, 68, 68, 0.3)); color: #fde047; border: 1px solid #facc15; box-shadow: 0 0 8px rgba(250, 204, 21, 0.4); }
+    .role-vp { background: rgba(245, 158, 11, 0.25); color: #fbbf24; border: 1px solid #f59e0b; }
+    .role-admin { background: rgba(245, 158, 11, 0.2); color: var(--mc-gold); border: 1px solid var(--mc-gold); }
+    .role-supervisor { background: rgba(59, 130, 246, 0.2); color: #60a5fa; border: 1px solid #3b82f6; }
+    .role-events { background: rgba(168, 85, 247, 0.2); color: var(--mc-purple); border: 1px solid var(--mc-purple); }
+    .role-social { background: rgba(236, 72, 153, 0.2); color: var(--mc-pink); border: 1px solid var(--mc-pink); }
+    .role-logistics { background: rgba(72, 187, 40, 0.2); color: var(--mc-green); border: 1px solid var(--mc-green); }
+    .role-tech { background: rgba(77, 238, 234, 0.2); color: var(--mc-diamond); border: 1px solid var(--mc-diamond); }
+
+    /* Task & Checklist UI */
+    .task-card {
+      background: #080b12;
+      border: 1px solid #283347;
+      border-radius: 6px;
+      padding: 1.1rem;
+      margin-bottom: 1rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.6rem;
+    }
+    .task-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0.6rem 0.8rem;
+      background: #101622;
+      border: 1px solid rgba(255, 255, 255, 0.05);
+      border-radius: 4px;
+      font-size: 0.82rem;
+    }
+    .task-row.is-done {
+      border-left: 3px solid var(--mc-green);
+      opacity: 0.85;
+    }
+    .task-row input[type="checkbox"] {
+      width: 18px;
+      height: 18px;
+      cursor: pointer;
+      accent-color: var(--mc-green);
+    }
+
+    .social-pill {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: #080b12;
+      border: 1px solid #283347;
+      padding: 0.75rem 1rem;
+      border-radius: 6px;
+      margin-bottom: 0.5rem;
+    }
+
+    .submission-card {
+      background: #080b12;
+      border: 1px solid #283347;
+      border-left: 4px solid var(--mc-gold);
+      border-radius: 6px;
+      padding: 1rem 1.2rem;
+      margin-bottom: 0.85rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.4rem;
+    }
+    .submission-card.status-approved { border-left-color: var(--mc-green); }
+    .submission-card.status-denied { border-left-color: var(--mc-red); opacity: 0.75; }
+
+    .submission-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+    }
+
+    .check-item {
+      display: flex;
+      align-items: center;
+      gap: 0.8rem;
+      padding: 0.75rem 1rem;
+      background: #080b12;
+      border: 1px solid #283347;
+      border-radius: 4px;
+      margin-bottom: 0.5rem;
+      font-size: 0.85rem;
+    }
+    .check-item input[type="checkbox"] { width: 18px; height: 18px; cursor: pointer; accent-color: var(--mc-green); }
+
+    table { width: 100%; border-collapse: collapse; text-align: left; font-size: 0.85rem; }
+    th {
+      background: #0a0e16;
+      padding: 0.75rem 1rem;
+      color: var(--mc-gold);
+      font-family: 'Press Start 2P', monospace;
+      font-size: 0.55rem;
+      border-bottom: 2px solid var(--border-subtle);
+    }
+    td { padding: 0.85rem 1rem; border-bottom: 1px solid var(--border-subtle); color: #cbd5e1; }
+
+    #chat-toast {
+      position: fixed;
+      bottom: 25px;
+      left: 25px;
+      background: rgba(0, 0, 0, 0.95);
+      border-left: 4px solid var(--mc-green);
+      color: #fff;
+      padding: 0.9rem 1.4rem;
+      font-family: 'VT323', monospace;
+      font-size: 1.35rem;
+      border-radius: 4px;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+      z-index: 9999999;
+      transform: translateY(150%);
+      transition: transform 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+    #chat-toast.active { transform: translateY(0); }
+
+    @media (max-width: 768px) {
+      .form-grid-2, .form-grid-3 { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Top Bar -->
+  <header>
+    <div class="container" style="padding-top:0; padding-bottom:0;">
+      <div class="nav-flex">
+        <div style="display:flex; align-items:center; gap:0.8rem;">
+          <a href="index.html" class="pixel-title" style="font-size: 0.8rem; color: #fff; text-decoration:none;">
+            WOSS EXECUTIVE NETWORK
+          </a>
+          <span id="roleBadgeSlot"></span>
+        </div>
+        <div style="display:flex; gap:0.6rem; align-items:center;">
+          <a href="index.html" class="mc-btn" style="padding: 0.5rem 0.8rem; font-size: 0.6rem;">
+            ⬅ RETURN TO MAIN SITE
+          </a>
+          <button id="logoutBtn" class="mc-btn red" style="display:none; padding: 0.5rem 0.8rem; font-size: 0.6rem;" onclick="handleLogout()">
+            LOGOUT
+          </button>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <div class="container">
+
+    <!-- ================= VIEW 0: LOGIN PORTAL ================= -->
+    <div id="loginView" class="card" style="max-width: 480px; margin: 3rem auto;">
+      <div class="tab-btn-row">
+        <button type="button" id="tabPasscodeBtn" class="tab-btn active" onclick="switchLoginMode('passcode')">
+          🔑 PASSCODE + 2FA
+        </button>
+        <button type="button" id="tabEmailOtpBtn" class="tab-btn" onclick="switchLoginMode('email')">
+          ✉️ ONE-TIME CODE (EMAIL)
+        </button>
+      </div>
+
+      <!-- Option A: Standard Login -->
+      <div id="passcodeLoginForm">
+        <h2 class="card-title pixel-title" style="color: var(--mc-gold); font-size: 0.9rem;">
+          ROLE AUTHENTICATION
+        </h2>
+        <p class="card-subtitle">
+          Sign in with your <strong>Username</strong>, <strong>Role Title</strong> (e.g. <em>founder</em>, <em>admin</em>, <em>tech</em>), or <strong>Email</strong>.<br>
+          <span style="color:var(--mc-diamond); font-size:0.75rem; font-weight:700;">🔒 Mandatory 2FA active on all accounts.</span>
+        </p>
+
+        <form onsubmit="handleInitialLogin(event)">
+          <div class="form-group">
+            <label>Username, Role Title, or Email</label>
+            <input type="text" id="usernameInput" class="admin-input" placeholder="e.g. founder, admin, vp, tech, supervisor" required autofocus>
+          </div>
+
+          <div class="form-group">
+            <label>Passcode</label>
+            <input type="password" id="passwordInput" class="admin-input" placeholder="••••••••••••" required>
+          </div>
+
+          <button type="submit" class="mc-btn green" style="width: 100%; margin-top: 1rem;">
+            AUTHENTICATE & SEND 2FA 🔓
+          </button>
+        </form>
+      </div>
+
+      <!-- Option B: Passwordless Email OTP Login -->
+      <div id="emailOtpLoginForm" style="display: none;">
+        <h2 class="card-title pixel-title" style="color: var(--mc-diamond); font-size: 0.9rem;">
+          ONE-TIME EMAIL SIGN-IN
+        </h2>
+        <p class="card-subtitle">
+          Enter your registered email to receive an instant 6-digit one-time login code.
+        </p>
+
+        <form onsubmit="handleEmailOtpRequest(event)">
+          <div class="form-group">
+            <label>Registered Staff Email</label>
+            <input type="email" id="emailOtpInput" class="admin-input" placeholder="e.g. 1dronamraven@hdsb.ca" required>
+          </div>
+
+          <div class="form-group">
+            <label>Sign In As (Role)</label>
+            <select id="emailRoleSelect" class="admin-input" style="background:#06080d;">
+              <option value="auto">Auto-Detect (Highest Assigned Role)</option>
+              <option value="Founder">👑 Founder</option>
+              <option value="Super Admin">🛡️ Super Admin</option>
+              <option value="Vice President">⭐ Vice President</option>
+              <option value="Supervisor">📋 Supervisor (Faculty / Staff)</option>
+              <option value="Logistics">📑 Logistics (Club Paperwork)</option>
+              <option value="Event Coordinator">🏆 Event Coordinator</option>
+              <option value="Social Media Lead">📱 Social Media Lead</option>
+              <option value="Server Tech Lead">⚙️ Server Tech Lead</option>
+            </select>
+          </div>
+
+          <button type="submit" class="mc-btn green" style="width: 100%; margin-top: 1rem;">
+            SEND LOGIN CODE TO EMAIL ✉️
+          </button>
+        </form>
+      </div>
+    </div>
+
+    <!-- ================= VIEW 0.5: 2FA VERIFICATION SCREEN ================= -->
+    <div id="twoFactorView" class="card" style="max-width: 480px; margin: 3rem auto; display: none; border-left: 4px solid var(--mc-gold);">
+      <h2 class="card-title pixel-title" style="color: var(--mc-gold); font-size: 0.9rem;">
+        🛡️ 2-FACTOR AUTHENTICATION
+      </h2>
+      <p class="card-subtitle" style="margin-bottom: 1rem;">
+        A 6-digit security code has been sent to your email: <br>
+        <strong id="twoFactorTargetEmail" style="color: var(--mc-diamond); font-family: monospace;">1d***@hdsb.ca</strong>
+      </p>
+
+      <form onsubmit="handleVerify2FA(event)">
+        <div class="form-group">
+          <label>Enter 6-Digit OTP</label>
+          <input type="text" id="otpCodeInput" class="admin-input otp-input" placeholder="000000" maxlength="6" required autocomplete="one-time-code" autofocus>
+        </div>
+
+        <div style="display:flex; gap:0.6rem; margin-top: 1.2rem;">
+          <button type="button" class="mc-btn" onclick="cancel2FA()" style="flex:1;">CANCEL</button>
+          <button type="submit" class="mc-btn green" style="flex:2;">VERIFY & UNLOCK ⛏️</button>
+        </div>
+      </form>
+
+      <div style="margin-top: 1.2rem; text-align:center;">
+        <button type="button" class="mc-btn" id="resend2FABtn" style="font-size:0.55rem; padding:0.4rem 0.8rem;" onclick="resend2FACode()">
+          🔄 Resend Code
+        </button>
+      </div>
+    </div>
+
+    <!-- ================= VIEW 1: SUPER ADMIN, FOUNDER & VP COMMAND ================= -->
+    <div id="superAdminView" style="display: none;">
+      <div class="card" style="border-left: 4px solid var(--mc-gold);">
+        <h2 id="highRoleHeader" class="pixel-title" style="font-size: 1.05rem; color: var(--mc-gold); margin-bottom: 0.3rem;">
+          EXECUTIVE MASTER COMMAND
+        </h2>
+        <p style="color:var(--text-muted); font-size:0.85rem;">Master permissions: account creation, staff roster, 2FA settings, and universal dashboard switcher.</p>
+        
+        <!-- Universal Role Switcher -->
+        <div style="margin-top: 1.2rem; display:flex; align-items:center; gap:0.5rem; flex-wrap:wrap;">
+          <span style="font-size:0.68rem; color:var(--text-muted); font-weight:bold;">PREVIEW ROLE DASHBOARDS:</span>
+          <button class="mc-btn gold" style="font-size:0.55rem; padding:0.35rem 0.6rem;" onclick="switchRoleView('admin')">Admin/Founder</button>
+          <button class="mc-btn blue" style="font-size:0.55rem; padding:0.35rem 0.6rem;" onclick="switchRoleView('supervisor')">Supervisor Radar</button>
+          <button class="mc-btn green" style="font-size:0.55rem; padding:0.35rem 0.6rem;" onclick="switchRoleView('logistics')">Logistics Desk</button>
+          <button class="mc-btn purple" style="font-size:0.55rem; padding:0.35rem 0.6rem;" onclick="switchRoleView('events')">Events</button>
+          <button class="mc-btn pink" style="font-size:0.55rem; padding:0.35rem 0.6rem;" onclick="switchRoleView('social')">Social Media</button>
+          <button class="mc-btn" style="font-size:0.55rem; padding:0.35rem 0.6rem; color:var(--mc-diamond);" onclick="switchRoleView('tech')">Tech Lead</button>
+        </div>
+      </div>
+
+      <!-- Club Data Management (Syncs to public site) -->
+      <div class="card" style="border-left: 4px solid var(--mc-diamond);">
+        <h3 class="card-title pixel-title" style="color:var(--mc-diamond); font-size:0.85rem;">
+          🌐 PUBLIC SITE SETTINGS (Syncs to Homepage)
+        </h3>
+        <p class="card-subtitle">Update links and codes that appear on the public website. Changes sync instantly via Firebase.</p>
+        <form onsubmit="handleUpdateClubData(event)">
+          <div class="form-grid-2">
+            <div class="form-group">
+              <label>Google Classroom Code</label>
+              <input type="text" id="clubClassroomCode" class="admin-input" value="4q5coqr4" required>
+            </div>
+            <div class="form-group">
+              <label>Discord Invite Link</label>
+              <input type="url" id="clubDiscordInvite" class="admin-input" value="https://discord.gg/jx3VNFyru" required>
+            </div>
+          </div>
+          <div class="form-grid-2">
+            <div class="form-group">
+              <label>Server IP / Address</label>
+              <input type="text" id="clubServerIP" class="admin-input" value="mc.wossgaming.ca" required>
+            </div>
+            <div class="form-group">
+              <label>Server Display Name</label>
+              <input type="text" id="clubServerName" class="admin-input" value="WOSS SMP Realm" required>
+            </div>
+          </div>
+          <button type="submit" class="mc-btn gold" style="margin-top: 0.5rem;">SAVE & SYNC TO HOMEPAGE ☁️</button>
+        </form>
+      </div>
+
+      <div class="card" style="border-left: 4px solid var(--mc-green);">
+        <h3 class="card-title pixel-title" style="color:var(--mc-green); font-size:0.85rem;">
+          📧 UPDATE RECOVERY 2FA EMAIL
+        </h3>
+        <p class="card-subtitle">Change the email address linked to your account for receiving 6-digit 2FA login verification codes.</p>
+        <form onsubmit="handleUpdateSuperAdminEmail(event)">
+          <div class="form-grid-2">
+            <div class="form-group">
+              <label>Current Registered Email</label>
+              <input type="email" id="superAdminCurrentEmail" class="admin-input" readonly style="opacity:0.8;">
+            </div>
+            <div class="form-group">
+              <label>New Linked Email</label>
+              <input type="email" id="superAdminNewEmail" class="admin-input" placeholder="e.g. 1dronamraven@hdsb.ca" required>
+            </div>
+          </div>
+          <button type="submit" class="mc-btn green">SAVE 2FA EMAIL 🛡️</button>
+        </form>
+      </div>
+
+      <div class="card" style="border-left: 4px solid var(--mc-diamond);">
+        <h3 class="card-title pixel-title" style="color:var(--mc-diamond); font-size:0.85rem;">
+          🔑 CHANGE ACCOUNT PASSCODE
+        </h3>
+        <p class="card-subtitle">Update the passcode for your personal account.</p>
+        <form onsubmit="handleChangeSuperAdminPassword(event)">
+          <div class="form-grid-3">
+            <div class="form-group">
+              <label>Current Passcode</label>
+              <input type="password" id="currSuperPass" class="admin-input" placeholder="••••••••••••" required>
+            </div>
+            <div class="form-group">
+              <label>New Passcode</label>
+              <input type="password" id="newSuperPass" class="admin-input" placeholder="••••••••••••" required minlength="4">
+            </div>
+            <div class="form-group">
+              <label>Confirm New Passcode</label>
+              <input type="password" id="confSuperPass" class="admin-input" placeholder="••••••••••••" required minlength="4">
+            </div>
+          </div>
+          <button type="submit" class="mc-btn gold">UPDATE PASSCODE 🔒</button>
+        </form>
+      </div>
+
+      <div class="card">
+        <h3 class="card-title pixel-title" style="color:var(--mc-diamond); font-size:0.85rem;">
+          📥 STUDENT WHITELIST REQUEST QUEUE (FROM WEBSITE)
+        </h3>
+        <p class="card-subtitle">Review incoming gamertags submitted via the website.</p>
+        <div id="whitelistQueueList"></div>
+      </div>
+
+      <div class="card">
+        <h3 class="card-title pixel-title" style="color:var(--mc-green); font-size:0.85rem;">
+          ➕ CREATE NEW EXECUTIVE CREDENTIALS
+        </h3>
+        <p class="card-subtitle">Generate login access for new student officers and assign specific role privileges.</p>
+        <form onsubmit="handleCreateAccount(event)">
+          <div class="form-grid-2">
+            <div class="form-group">
+              <label>Username (No spaces, e.g. sara_vp)</label>
+              <input type="text" id="newUsername" class="admin-input" placeholder="e.g. sara_vp" required>
+            </div>
+            <div class="form-group">
+              <label>Officer Full Name</label>
+              <input type="text" id="newDisplayName" class="admin-input" placeholder="Sara (Grade 11)" required>
+            </div>
+          </div>
+          <div class="form-grid-3">
+            <div class="form-group">
+              <label>Officer Email (for 2FA)</label>
+              <input type="email" id="newOfficerEmail" class="admin-input" placeholder="1dronamraven@hdsb.ca" required>
+            </div>
+            <div class="form-group">
+              <label>Assigned Role</label>
+              <select id="newRole" class="admin-input" style="background:#06080d;">
+                <option value="Super Admin">🛡️ Super Admin (Protected Role)</option>
+                <option value="Vice President">⭐ Vice President (High Privilege)</option>
+                <option value="Supervisor">📋 Supervisor (Faculty / Sponsor)</option>
+                <option value="Logistics">📑 Logistics (Paperwork & Forms)</option>
+                <option value="Event Coordinator">🏆 Event Coordinator (Tournaments)</option>
+                <option value="Social Media Lead">📱 Social Media Lead (PR & Discord)</option>
+                <option value="Server Tech Lead">⚙️ Server Tech Lead (Operations)</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Passcode</label>
+              <input type="password" id="newPassword" class="admin-input" placeholder="••••••••••••" required>
+            </div>
+          </div>
+          <button type="submit" class="mc-btn green">SAVE & SYNC OFFICER ACCOUNT 🛡️</button>
+        </form>
+      </div>
+
+      <div class="card">
+        <h3 class="card-title pixel-title" style="color:var(--mc-gold); font-size:0.85rem;">ACTIVE EXECUTIVE ROSTER</h3>
+        <p class="card-subtitle">Manage accounts, linked 2FA emails, or revoke officer privileges (Founder & Super Admin accounts are permanent).</p>
+        <table>
+          <thead>
+            <tr><th>USER</th><th>NAME</th><th>ROLE</th><th>LINKED EMAIL</th><th>ACTIONS</th></tr>
+          </thead>
+          <tbody id="rosterTableBody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ================= VIEW 2: SUPERVISOR (ROLE STATUS RADAR & WORK CHECKLIST) ================= -->
+    <div id="supervisorView" style="display: none;">
+      <div class="card" style="border-left: 4px solid var(--mc-blue);">
+        <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:0.8rem; margin-bottom:1rem;">
+          <div>
+            <h2 class="pixel-title" style="font-size: 1.05rem; color: #60a5fa; margin-bottom: 0.3rem;">
+              📋 SUPERVISOR ROLE STATUS & WORK RADAR
+            </h2>
+            <p style="color:var(--text-muted); font-size:0.85rem;">Inspect live duty completion across all club roles before each weekly session.</p>
+          </div>
+          <div id="supervisorSignOffBadge" style="font-size:0.75rem; color:var(--mc-diamond); font-family:monospace; background:#080b12; padding:0.4rem 0.8rem; border-radius:4px; border:1px solid #283347;">
+            Pending Supervisor Certification
+          </div>
+        </div>
+
+        <div style="background:#080b12; border:1px solid #283347; border-radius:6px; padding:0.9rem 1.1rem;">
+          <div style="display:flex; justify-content:space-between; font-size:0.75rem; margin-bottom:0.5rem;">
+            <span style="font-family:'Press Start 2P', monospace; font-size:0.58rem; color:var(--mc-gold);">CLUB WORK READINESS</span>
+            <span id="readinessPercentText" style="font-weight:bold; color:var(--mc-green);">0% Completed</span>
+          </div>
+          <div style="width:100%; height:14px; background:#121824; border-radius:4px; overflow:hidden; border:1px solid #283347;">
+            <div id="readinessProgressBar" style="width:0%; height:100%; background:linear-gradient(90deg, #48bb28, #4deeea); transition:width 0.3s ease;"></div>
+          </div>
+        </div>
+      </div>
+
+      <div id="supervisorRoleCardsContainer" class="form-grid-2"></div>
+
+      <div class="card" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:1rem;">
+        <div>
+          <h4 class="pixel-title" style="font-size:0.8rem; color:var(--mc-gold); margin-bottom:0.2rem;">SUPERVISOR SIGN-OFF</h4>
+          <p style="font-size:0.8rem; color:var(--text-muted);">Certify that all departments have completed their responsibilities for the meeting.</p>
+        </div>
+        <div style="display:flex; gap:0.6rem;">
+          <button class="mc-btn blue" onclick="signOffMeeting()">✅ SIGN OFF MEETING</button>
+          <button class="mc-btn" onclick="resetSupervisorTasks()">🔄 RESET TASKS</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ================= VIEW 3: LOGISTICS (CLEAN GOOGLE FORMS REVIEW HUB) ================= -->
+    <div id="logisticsView" style="display: none;">
+      <div class="card" style="border-left: 4px solid var(--mc-green);">
+        <h2 class="pixel-title" style="font-size: 1.05rem; color: var(--mc-green); margin-bottom: 0.3rem;">
+          📑 CLUB LOGISTICS & GOOGLE FORMS REVIEW DESK
+        </h2>
+        <p style="color:var(--text-muted); font-size:0.85rem;">Review student submissions. <strong>Approving an application automatically pushes their Minecraft Player ID into the live server whitelist!</strong></p>
+      </div>
+
+      <div class="card">
+        <h3 class="card-title pixel-title" style="color:var(--mc-diamond); font-size:0.85rem;">
+          🔗 LINKED GOOGLE FORM (RESPONSES SHEET)
+        </h3>
+        <p class="card-subtitle">Connect your Google Form's linked Spreadsheet to review student applications in real time.</p>
+        <div class="form-grid-2">
+          <div class="form-group">
+            <label>Google Sheet ID (From Sheet URL)</label>
+            <input type="text" id="logisticsSheetId" class="admin-input" placeholder="e.g. 1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgvE2upms">
+          </div>
+          <div style="display:flex; align-items:flex-end; gap:0.5rem; margin-bottom:1.2rem;">
+            <button class="mc-btn green" onclick="saveAndFetchGoogleForms()">SYNC RESPONSES 🔄</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.2rem; flex-wrap:wrap; gap:0.5rem;">
+          <div>
+            <h3 class="card-title pixel-title" style="color:var(--mc-gold); font-size:0.85rem; margin-bottom:0.2rem;">
+              📥 INCOMING SUBMISSIONS QUEUE
+            </h3>
+            <span id="formsQueueCount" style="font-size:0.75rem; color:var(--text-muted);">0 submissions pending review</span>
+          </div>
+          <button class="mc-btn" style="font-size:0.55rem; padding:0.35rem 0.7rem;" onclick="fetchGoogleFormResponses()">
+            Refresh Feed 🔄
+          </button>
+        </div>
+        <div id="formsSubmissionsFeed"></div>
+      </div>
+
+      <div class="card" style="border-left: 4px solid var(--mc-diamond);">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.8rem; flex-wrap:wrap; gap:0.5rem;">
+          <div>
+            <h3 class="card-title pixel-title" style="color:var(--mc-diamond); font-size:0.85rem; margin-bottom:0.2rem;">
+              🛡️ OFFICIAL APPROVED SERVER WHITELIST
+            </h3>
+            <p style="color:var(--text-muted); font-size:0.8rem;">Every approved application automatically lands here for server operators.</p>
+          </div>
+          <button class="mc-btn green" onclick="copyAllWhitelistCommands()">
+            📋 Copy All Whitelist Commands
+          </button>
+        </div>
+        <div class="table-responsive">
+          <table>
+            <thead>
+              <tr><th>PLAYER ID (IGN)</th><th>STUDENT NAME</th><th>EMAIL</th><th>APPROVED BY</th><th>ACTIONS</th></tr>
+            </thead>
+            <tbody id="approvedWhitelistTableBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ================= VIEW 4: EVENT COORDINATOR ================= -->
+    <div id="eventsView" style="display: none;">
+      <div class="card" style="border-left: 4px solid var(--mc-purple);">
+        <h2 class="pixel-title" style="font-size: 1.05rem; color: var(--mc-purple); margin-bottom: 0.3rem;">
+          🏆 EVENT & TOURNAMENT COORDINATION
+        </h2>
+        <p style="color:var(--text-muted); font-size:0.85rem;">Create official event posts, broadcast tournament dates, and manage BedWars brackets.</p>
+      </div>
+
+      <div class="card" style="border-left: 4px solid var(--mc-gold);">
+        <h3 class="card-title pixel-title" style="color:var(--mc-gold); font-size:0.85rem;">
+          📅 CREATE & BROADCAST OFFICIAL EVENT POST
+        </h3>
+        <p class="card-subtitle">
+          Draft a competition announcement to push live to the homepage feed with the <strong>[EVENT]</strong> tag!
+        </p>
+
+        <form onsubmit="handleCreateEventPost(event)">
+          <div class="form-grid-2">
+            <div class="form-group">
+              <label>Event Title</label>
+              <input type="text" id="eventPostTitle" class="admin-input" placeholder="e.g. Duo BedWars Autumn Championship" required>
+            </div>
+            <div class="form-group">
+              <label>Date & Time</label>
+              <input type="text" id="eventPostDate" class="admin-input" placeholder="e.g. Thursday, Oct 24 @ 3:30 PM" required>
+            </div>
+          </div>
+
+          <div class="form-grid-3">
+            <div class="form-group">
+              <label>Location / Server</label>
+              <input type="text" id="eventPostLocation" class="admin-input" placeholder="e.g. Lab 204 & SMP Realm" required>
+            </div>
+            <div class="form-group">
+              <label>Format / Game Mode</label>
+              <select id="eventPostType" class="admin-input" style="background:#06080d;">
+                <option value="Duo BedWars Elimination">⚔️ Duo BedWars Elimination</option>
+                <option value="Speed-Build Challenge">🏰 Speed-Build Challenge (Theme)</option>
+                <option value="Nether Fortress Raid">🔥 Nether Fortress Boss Raid</option>
+                <option value="Parkour Race">🏃 Custom Parkour Time-Trial</option>
+                <option value="Survival Games FFA">🏹 Survival Games FFA</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Prizes & Rewards</label>
+              <input type="text" id="eventPostPrize" class="admin-input" placeholder="e.g. Discord Champion Role + Netherite" required>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label>Event Rules & Match Details</label>
+            <textarea id="eventPostDesc" class="admin-input" rows="3" placeholder="Explain team registration, matchmaking rules, and requirements..." required>Teams of 2. Bring your school laptops or use lab computers. No hacked clients or auto-clickers. Winner receives custom Discord champion badge!</textarea>
+          </div>
+
+          <button type="submit" class="mc-btn purple" style="width:100%;">
+            BROADCAST EVENT POST TO HOMEPAGE 📢
+          </button>
+        </form>
+      </div>
+
+      <div class="card">
+        <h3 class="card-title pixel-title" style="color:var(--mc-diamond); font-size:0.85rem;">
+          ⚔️ BEDWARS 4-DUO ELIMINATION BRACKET
+        </h3>
+        <p class="card-subtitle">Seed participating student teams and advance winners with one click.</p>
+        <div class="form-grid-2">
+          <div class="form-group">
+            <label>Match 1 Teams</label>
+            <input type="text" id="teamA" class="admin-input" value="Acorn Strikers (Team 1)">
+            <input type="text" id="teamB" class="admin-input" style="margin-top:0.4rem;" value="Void Walkers (Team 2)">
+          </div>
+          <div class="form-group">
+            <label>Match 2 Teams</label>
+            <input type="text" id="teamC" class="admin-input" value="Redstone Titans (Team 3)">
+            <input type="text" id="teamD" class="admin-input" style="margin-top:0.4rem;" value="Diamond Miners (Team 4)">
+          </div>
+        </div>
+        <button class="mc-btn purple" onclick="updateBracketTeams()">UPDATE BRACKET ROSTER</button>
+
+        <div class="bracket-grid" style="display:grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap:1.2rem; margin-top:1rem;">
+          <div style="background:#080b12; border:1px solid #283347; border-radius:6px; padding:1rem;">
+            <span style="font-size:0.7rem; color:var(--text-muted); font-weight:bold;">SEMIFINAL 1</span>
+            <div id="slotA" style="display:flex; justify-content:space-between; padding:0.5rem; background:#121824; margin:0.35rem 0;">
+              <span id="nameA">Team A</span>
+              <button class="mc-btn green" style="padding:0.25rem 0.5rem; font-size:0.5rem;" onclick="setWinner('A')">Win</button>
+            </div>
+            <div id="slotB" style="display:flex; justify-content:space-between; padding:0.5rem; background:#121824; margin:0.35rem 0;">
+              <span id="nameB">Team B</span>
+              <button class="mc-btn green" style="padding:0.25rem 0.5rem; font-size:0.5rem;" onclick="setWinner('B')">Win</button>
+            </div>
+          </div>
+
+          <div style="background:#080b12; border:1px solid #283347; border-radius:6px; padding:1rem;">
+            <span style="font-size:0.7rem; color:var(--text-muted); font-weight:bold;">SEMIFINAL 2</span>
+            <div id="slotC" style="display:flex; justify-content:space-between; padding:0.5rem; background:#121824; margin:0.35rem 0;">
+              <span id="nameC">Team C</span>
+              <button class="mc-btn green" style="padding:0.25rem 0.5rem; font-size:0.5rem;" onclick="setWinner('C')">Win</button>
+            </div>
+            <div id="slotD" style="display:flex; justify-content:space-between; padding:0.5rem; background:#121824; margin:0.35rem 0;">
+              <span id="nameD">Team D</span>
+              <button class="mc-btn green" style="padding:0.25rem 0.5rem; font-size:0.5rem;" onclick="setWinner('D')">Win</button>
+            </div>
+          </div>
+
+          <div style="background:#080b12; border:2px solid var(--mc-gold); border-radius:6px; padding:1rem;">
+            <span style="font-size:0.7rem; color:var(--mc-gold); font-weight:bold;">GRAND FINALS 🏆</span>
+            <div id="slotFinal1" style="padding:0.5rem; background:#121824; margin:0.35rem 0;"><span id="finalTeam1">TBD</span></div>
+            <div id="slotFinal2" style="padding:0.5rem; background:#121824; margin:0.35rem 0;"><span id="finalTeam2">TBD</span></div>
+            <button class="mc-btn gold" style="width:100%; margin-top:0.5rem;" onclick="crownChampion()">CROWN CHAMPION</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ================= VIEW 5: SOCIAL MEDIA & PR ================= -->
+    <div id="socialView" style="display: none;">
+      <div class="card" style="border-left: 4px solid var(--mc-pink);">
+        <h2 class="pixel-title" style="font-size: 1.05rem; color: var(--mc-pink); margin-bottom: 0.3rem;">
+          📱 SOCIAL MEDIA & PR COMMAND HUB
+        </h2>
+        <p style="color:var(--text-muted); font-size:0.85rem;">Official communications, Discord management, Google Classroom links, and custom platforms.</p>
+      </div>
+
+      <!-- Core Channels -->
+      <div class="card">
+        <h3 class="card-title pixel-title" style="color:var(--mc-diamond); font-size:0.85rem;">
+          🌐 OFFICIAL CORE CLUB CHANNELS
+        </h3>
+        <p class="card-subtitle">Permanent official links for White Oaks Secondary School Minecraft Club.</p>
+        <div class="form-grid-2">
+          <div class="social-pill" style="border-left: 3px solid var(--discord);">
+            <div>
+              <strong style="color:#828cf7;">💬 WOSS Discord Server</strong>
+              <div style="font-size:0.75rem; color:var(--text-muted); font-family:monospace; margin-top:0.2rem;">https://discord.gg/jx3VNFyru</div>
+            </div>
+            <div style="display:flex; gap:0.3rem;">
+              <button class="mc-btn" style="padding:0.3rem 0.6rem; font-size:0.5rem;" onclick="copySocialLink('https://discord.gg/jx3VNFyru', 'Discord invite link copied!')">📋 Copy</button>
+              <a href="https://discord.gg/jx3VNFyru" target="_blank" class="mc-btn discord" style="padding:0.3rem 0.6rem; font-size:0.5rem;">Launch</a>
+            </div>
+          </div>
+
+          <div class="social-pill" style="border-left: 3px solid var(--classroom-green);">
+            <div>
+              <strong style="color:var(--classroom-green);">📚 Google Classroom</strong>
+              <div style="font-size:0.75rem; color:var(--text-muted); font-family:monospace; margin-top:0.2rem;">Class Code: <strong>4q5coqr4</strong></div>
+            </div>
+            <div style="display:flex; gap:0.3rem;">
+              <button class="mc-btn" style="padding:0.3rem 0.6rem; font-size:0.5rem;" onclick="copySocialLink('4q5coqr4', 'Classroom code copied!')">📋 Copy Code</button>
+              <a href="https://classroom.google.com" target="_blank" class="mc-btn green" style="padding:0.3rem 0.6rem; font-size:0.5rem;">Open</a>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Custom Social Links -->
+      <div class="card">
+        <h3 class="card-title pixel-title" style="color:var(--mc-pink); font-size:0.85rem;">
+          🔗 CONNECTED SOCIAL MEDIA PLATFORMS
+        </h3>
+        <p class="card-subtitle">Manage other club social platforms (Instagram, YouTube, Twitch, TikTok, etc.).</p>
+
+        <form onsubmit="handleAddSocialLink(event)" style="margin-bottom:1.5rem; background:#080b12; padding:1.2rem; border-radius:6px; border:1px solid #283347;">
+          <h4 style="font-size:0.75rem; color:var(--mc-gold); margin-bottom:0.8rem; font-family:'Press Start 2P', monospace;">➕ ADD NEW PLATFORM LINK</h4>
+          <div class="form-grid-3">
+            <div class="form-group" style="margin-bottom:0;">
+              <label>Platform Name</label>
+              <input type="text" id="newPlatformName" class="admin-input" placeholder="e.g. Instagram" required>
+            </div>
+            <div class="form-group" style="margin-bottom:0;">
+              <label>Handle / Display Name</label>
+              <input type="text" id="newPlatformHandle" class="admin-input" placeholder="e.g. @woss_minecraft" required>
+            </div>
+            <div class="form-group" style="margin-bottom:0;">
+              <label>Link URL</label>
+              <input type="url" id="newPlatformUrl" class="admin-input" placeholder="https://instagram.com/..." required>
+            </div>
+          </div>
+          <button type="submit" class="mc-btn pink" style="margin-top:1rem;">SAVE PLATFORM LINK 🚀</button>
+        </form>
+
+        <div id="socialLinksListContainer"></div>
+      </div>
+
+      <div class="card">
+        <h3 class="card-title pixel-title" style="color:var(--mc-gold); font-size:0.85rem;">
+          📢 BROADCAST TO HOMEPAGE DISPATCHES
+        </h3>
+        <p class="card-subtitle">Draft a public promotional post to publish directly to the live website.</p>
+        <div class="form-group">
+          <label>Broadcast Headline</label>
+          <input type="text" id="socialPostTitle" class="admin-input" value="Join our Official Discord & Instagram: New Builds Posted!">
+        </div>
+        <div class="form-group">
+          <label>Post Body & Social Links</label>
+          <textarea id="socialPostContent" class="admin-input" rows="3">Check out the South Wing 1:1 campus build screenshots in #build-showcase! Join our official Discord: https://discord.gg/jx3VNFyru</textarea>
+        </div>
+        <button class="mc-btn pink" onclick="postSocialAnnouncement()">PUBLISH SOCIAL DISPATCH 🚀</button>
+      </div>
+    </div>
+
+    <!-- ================= VIEW 6: SERVER TECH LEAD ================= -->
+    <div id="techView" style="display: none;">
+      <div class="card" style="border-left: 4px solid var(--mc-diamond);">
+        <h2 class="pixel-title" style="font-size: 1.05rem; color: var(--mc-diamond); margin-bottom: 0.3rem;">
+          ⚙️ SERVER OPERATIONS & TECH LEAD
+        </h2>
+        <p style="color:var(--text-muted); font-size:0.85rem;">Minecraft server commands, live whitelist manager, and operator maintenance.</p>
+      </div>
+
+      <div class="card">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.8rem; flex-wrap:wrap; gap:0.5rem;">
+          <div>
+            <h3 class="card-title pixel-title" style="color:var(--mc-diamond); font-size:0.85rem; margin-bottom:0.2rem;">
+              🛡️ APPROVED PLAYERS READY FOR SERVER CONSOLE
+            </h3>
+            <p style="color:var(--text-muted); font-size:0.8rem;">Copy commands to paste into the Paper/Spigot server terminal.</p>
+          </div>
+          <button class="mc-btn green" onclick="copyAllWhitelistCommands()">
+            📋 Copy All Whitelist Commands
+          </button>
+        </div>
+
+        <div class="table-responsive">
+          <table>
+            <thead>
+              <tr><th>PLAYER ID (IGN)</th><th>STUDENT NAME</th><th>EMAIL</th><th>APPROVED BY</th><th>ACTIONS</th></tr>
+            </thead>
+            <tbody id="techApprovedWhitelistTableBody"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3 class="card-title pixel-title" style="color:var(--mc-diamond); font-size:0.85rem;">
+          💻 OPERATOR COMMAND GENERATOR
+        </h3>
+        <p class="card-subtitle">Quickly generate and copy operator console commands.</p>
+        <div class="form-grid-2">
+          <div class="form-group">
+            <label>Command Type</label>
+            <select id="cmdType" class="admin-input" onchange="updateCmdPreview()" style="background:#06080d;">
+              <option value="whitelist">Whitelist Add (/whitelist add &lt;ign&gt;)</option>
+              <option value="teleport">Teleport (/tp &lt;player&gt; &lt;coords&gt;)</option>
+              <option value="gamerule">Keep Inventory (/gamerule keepInventory true)</option>
+              <option value="coreprotect">CoreProtect Rollback (/co rollback u:&lt;user&gt; t:1h)</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Target Player / Value</label>
+            <input type="text" id="cmdTarget" class="admin-input" placeholder="e.g. AlexCraft123" oninput="updateCmdPreview()">
+          </div>
+        </div>
+        <div style="background:#06080d; border:1px solid #283347; padding:0.8rem 1rem; border-radius:4px; display:flex; justify-content:space-between; align-items:center; margin-top:0.5rem;">
+          <code id="cmdPreview" style="color:var(--mc-diamond); font-family:monospace; font-size:1.05rem;">/whitelist add Player</code>
+          <button class="mc-btn green" onclick="copyGeneratedCmd()">📋 Copy Command</button>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Toast -->
+  <div id="chat-toast">
+    <span style="color:var(--mc-diamond);">&lt;Terminal&gt;</span> <span id="toastMsg">Ready</span>
+  </div>
+
+  <script>
+    /* =========================================================
+       1. FIREBASE CONFIGURATION
+       ========================================================= */
+    const firebaseConfig = {
+      apiKey: "AIzaSyAvCra6Bz-PHPKCvzoBIPUQdyxBwlaswc8",
+      authDomain: "wossminecraftclub.firebaseapp.com",
+      databaseURL: "https://wossminecraftclub-default-rtdb.firebaseio.com",
+      projectId: "wossminecraftclub",
+      storageBucket: "wossminecraftclub.firebasestorage.app",
+      messagingSenderId: "710204964330",
+      appId: "1:710204964330:web:202ea82b4676eaca040693",
+      measurementId: "G-NEC5DNS4D7"
+    };
+
+    let db = null;
+
+    /* =========================================================
+       2. LIVE EMAIL SERVICE SETTINGS
+       ========================================================= */
+    const EMAILJS_PUBLIC_KEY = "jl4KRYLWNtwZ8rpD9";
+    const EMAILJS_SERVICE_ID = "service_p9ckhnq";
+    const EMAILJS_TEMPLATE_ID = "template_k5zs80q";
+
+    try {
+      if (typeof emailjs !== 'undefined' && EMAILJS_PUBLIC_KEY) {
+        emailjs.init(EMAILJS_PUBLIC_KEY);
+      }
+    } catch(e){}
+
+    async function sha256(text) {
+      const msgBuffer = new TextEncoder().encode(text);
+      const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
+      return Array.from(new Uint8Array(hashBuffer)).map(b => b.toString(16).padStart(2, '0')).join('');
+    }
+
+    const MASTER_HASH = "a33e30362470e9d18a6b033d7b613ca16b30ba5db69f3b0a6e0805b279ddc1c2"; // woss2026
+
+    const DEFAULT_ACCOUNTS = [
+      {
+        username: "founder",
+        name: "Club Founder",
+        role: "Founder",
+        email: "1dronamraven@hdsb.ca",
+        passHash: MASTER_HASH
+      },
+      {
+        username: "admin",
+        name: "Sponsor / Super Admin",
+        role: "Super Admin",
+        email: "1dronamraven@hdsb.ca",
+        passHash: MASTER_HASH
+      },
+      {
+        username: "vp",
+        name: "Vice President",
+        role: "Vice President",
+        email: "1dronamraven@hdsb.ca",
+        passHash: MASTER_HASH
+      },
+      {
+        username: "supervisor",
+        name: "Teacher Sponsor",
+        role: "Supervisor",
+        email: "1dronamraven@hdsb.ca",
+        passHash: MASTER_HASH
+      },
+      {
+        username: "events",
+        name: "Event Coordinator",
+        role: "Event Coordinator",
+        email: "1dronamraven@hdsb.ca",
+        passHash: MASTER_HASH
+      },
+      {
+        username: "social",
+        name: "Social Media Lead",
+        role: "Social Media Lead",
+        email: "1dronamraven@hdsb.ca",
+        passHash: MASTER_HASH
+      },
+      {
+        username: "logistics",
+        name: "Logistics Officer",
+        role: "Logistics",
+        email: "1dronamraven@hdsb.ca",
+        passHash: MASTER_HASH
+      },
+      {
+        username: "tech",
+        name: "Server Tech Lead",
+        role: "Server Tech Lead",
+        email: "1dronamraven@hdsb.ca",
+        passHash: MASTER_HASH
+      }
+    ];
+
+    const DEFAULT_SUPERVISOR_TASKS = [
+      {
+        role: "Logistics",
+        title: "📑 LOGISTICS DEPARTMENT",
+        badgeClass: "role-logistics",
+        tasks: [
+          { id: "log_1", text: "Lab 204 Computer Hardware Audit & Peripherals Checked", done: false },
+          { id: "log_2", text: "Process & Whitelist Incoming Google Form Submissions", done: false },
+          { id: "log_3", text: "Confirm Lab 204 Weekly Recurring Room Booking (Thu)", done: false }
+        ]
+      },
+      {
+        role: "Server Tech Lead",
+        title: "⚙️ SERVER TECH & INFRASTRUCTURE",
+        badgeClass: "role-tech",
+        tasks: [
+          { id: "tech_1", text: "Execute Approved Whitelist in Minecraft Server Console", done: false },
+          { id: "tech_2", text: "Run CoreProtect Database & Griefing Backup", done: false },
+          { id: "tech_3", text: "Verify Paper/SMP Server TPS & Connectivity", done: false }
+        ]
+      },
+      {
+        role: "Event Coordinator",
+        title: "🏆 EVENTS & TOURNAMENTS",
+        badgeClass: "role-events",
+        tasks: [
+          { id: "event_1", text: "Finalize BedWars / Build Battle Bracket Rosters", done: false },
+          { id: "event_2", text: "Prepare Custom In-Game Arena & Rulebook", done: false },
+          { id: "event_3", text: "Publish Tournament Schedule to Website", done: false }
+        ]
+      },
+      {
+        role: "Social Media Lead",
+        title: "📱 SOCIAL MEDIA & PR",
+        badgeClass: "role-social",
+        tasks: [
+          { id: "social_1", text: "Post Weekly Meeting Reminder in Discord Announcements", done: false },
+          { id: "social_2", text: "Publish Homepage Dispatches with Meeting Room & Times", done: false },
+          { id: "social_3", text: "Share 1:1 School Recreation Project Screenshots", done: false }
+        ]
+      },
+      {
+        role: "Vice President",
+        title: "⭐ VICE PRESIDENT & GOVERNANCE",
+        badgeClass: "role-vp",
+        tasks: [
+          { id: "vp_1", text: "Review Weekly Club Agenda with Founder / President", done: false },
+          { id: "vp_2", text: "Verify Officer Attendance & Station Supervision Duties", done: false },
+          { id: "vp_3", text: "Confirm Student Council Compliance & Safety Rules", done: false }
+        ]
+      }
+    ];
+
+    const DEFAULT_SOCIAL_LINKS = [
+      { id: "soc_insta", name: "Instagram", handle: "@woss_crafters", url: "https://instagram.com" },
+      { id: "soc_yt", name: "YouTube", handle: "WOSS Gaming Channel", url: "https://youtube.com" }
+    ];
+
+    let liveAccounts = [...DEFAULT_ACCOUNTS];
+    let liveApprovedWhitelist = [];
+    let liveSocialLinks = [...DEFAULT_SOCIAL_LINKS];
+    let liveSupervisorTasks = JSON.parse(JSON.stringify(DEFAULT_SUPERVISOR_TASKS));
+
+    function initFirebase() {
+      if (typeof firebase !== 'undefined' && firebaseConfig.apiKey) {
+        try {
+          if (!firebase.apps.length) {
+            firebase.initializeApp(firebaseConfig);
+          }
+          db = firebase.database();
+          console.log("[WOSS Cloud] Firebase connected!");
+
+          db.ref("staff_accounts").on("value", (snapshot) => {
+            const data = snapshot.val();
+            if (data && Array.isArray(data) && data.length > 0) {
+              liveAccounts = data;
+            } else {
+              db.ref("staff_accounts").set(DEFAULT_ACCOUNTS);
+              liveAccounts = [...DEFAULT_ACCOUNTS];
+            }
+            renderRoster();
+          });
+
+          db.ref("whitelist_queue").on("value", (snapshot) => {
+            renderWhitelistQueue(snapshot.val());
+          });
+
+          db.ref("approved_whitelist").on("value", (snapshot) => {
+            const data = snapshot.val();
+            if (data && Array.isArray(data)) {
+              liveApprovedWhitelist = data;
+            } else if (data && typeof data === 'object') {
+              liveApprovedWhitelist = Object.keys(data).map(k => ({ key: k, ...data[k] }));
+            } else {
+              liveApprovedWhitelist = getApprovedWhitelistLocal();
+            }
+            renderApprovedWhitelistTable();
+          });
+
+          db.ref("social_links").on("value", (snapshot) => {
+            const data = snapshot.val();
+            if (data && Array.isArray(data) && data.length > 0) {
+              liveSocialLinks = data;
+            } else {
+              liveSocialLinks = [...DEFAULT_SOCIAL_LINKS];
+            }
+            renderSocialLinks();
+          });
+
+          db.ref("supervisor_tasks").on("value", (snapshot) => {
+            const data = snapshot.val();
+            if (data && Array.isArray(data) && data.length > 0) {
+              liveSupervisorTasks = data;
+            }
+            renderSupervisorTasks();
+          });
+
+          db.ref("supervisor_signoff").on("value", (snapshot) => {
+            const val = snapshot.val();
+            const badge = document.getElementById("supervisorSignOffBadge");
+            if (badge) {
+              badge.innerHTML = val ? `✅ Certified: ${escapeHTML(val)}` : `Pending Supervisor Certification`;
+              badge.style.color = val ? 'var(--mc-green)' : 'var(--mc-diamond)';
+            }
+          });
+
+          db.ref("logistics_sheet_id").on("value", (snapshot) => {
+            const id = snapshot.val();
+            if (id) {
+              const input = document.getElementById("logisticsSheetId");
+              if (input && !input.value) input.value = id;
+              fetchGoogleFormResponses(id);
+            }
+          });
+
+          db.ref("logistics_reviews").on("value", () => {
+            fetchGoogleFormResponses();
+          });
+
+          // Club data (public site settings)
+          db.ref("club_data").on("value", (snapshot) => {
+            const data = snapshot.val();
+            if (data) {
+              const classroomCode = document.getElementById("clubClassroomCode");
+              const discordInvite = document.getElementById("clubDiscordInvite");
+              const serverIP = document.getElementById("clubServerIP");
+              const serverName = document.getElementById("clubServerName");
+              if (classroomCode) classroomCode.value = data.classroomCode || "4q5coqr4";
+              if (discordInvite) discordInvite.value = data.discordInvite || "https://discord.gg/jx3VNFyru";
+              if (serverIP) serverIP.value = data.serverIP || "mc.wossgaming.ca";
+              if (serverName) serverName.value = data.serverName || "WOSS SMP Realm";
+            }
+          });
+
+        } catch(err) {
+          console.warn("[WOSS Cloud] Offline mode:", err);
+          loadLocalAccounts();
+        }
+      } else {
+        loadLocalAccounts();
+      }
+    }
+
+    function loadLocalAccounts() {
+      try {
+        const stored = localStorage.getItem("woss_role_accounts_v5");
+        liveAccounts = stored ? JSON.parse(stored) : DEFAULT_ACCOUNTS;
+      } catch(e) {
+        liveAccounts = DEFAULT_ACCOUNTS;
+      }
+      liveApprovedWhitelist = getApprovedWhitelistLocal();
+      try {
+        const socStored = localStorage.getItem("woss_social_links");
+        liveSocialLinks = socStored ? JSON.parse(socStored) : DEFAULT_SOCIAL_LINKS;
+      } catch(e) {
+        liveSocialLinks = DEFAULT_SOCIAL_LINKS;
+      }
+      
+      // Load club data from localStorage
+      try {
+        const clubStored = localStorage.getItem("woss_club_data");
+        if (clubStored) {
+          const clubData = JSON.parse(clubStored);
+          const classroomCode = document.getElementById("clubClassroomCode");
+          const discordInvite = document.getElementById("clubDiscordInvite");
+          const serverIP = document.getElementById("clubServerIP");
+          const serverName = document.getElementById("clubServerName");
+          if (classroomCode) classroomCode.value = clubData.classroomCode || "4q5coqr4";
+          if (discordInvite) discordInvite.value = clubData.discordInvite || "https://discord.gg/jx3VNFyru";
+          if (serverIP) serverIP.value = clubData.serverIP || "mc.wossgaming.ca";
+          if (serverName) serverName.value = clubData.serverName || "WOSS SMP Realm";
+        }
+      } catch(e) {}
+      
+      renderApprovedWhitelistTable();
+      renderSocialLinks();
+      renderSupervisorTasks();
+    }
+
+    function getAccounts() {
+      return liveAccounts;
+    }
+
+    function saveAccounts(list) {
+      liveAccounts = list;
+      if (db) {
+        db.ref("staff_accounts").set(list).then(() => {
+          showToast("Changes synced across all devices via Cloud! ☁️");
+        });
+      } else {
+        try {
+          localStorage.setItem("woss_role_accounts_v5", JSON.stringify(list));
+        } catch(e){}
+      }
+      renderRoster();
+    }
+
+    function getApprovedWhitelistLocal() {
+      try {
+        return JSON.parse(localStorage.getItem("woss_approved_whitelist") || "[]");
+      } catch(e) {
+        return [];
+      }
+    }
+
+    function getApprovedWhitelist() {
+      return liveApprovedWhitelist.length > 0 ? liveApprovedWhitelist : getApprovedWhitelistLocal();
+    }
+
+    function saveApprovedWhitelist(list) {
+      liveApprovedWhitelist = list;
+      if (db) {
+        db.ref("approved_whitelist").set(list);
+      } else {
+        try {
+          localStorage.setItem("woss_approved_whitelist", JSON.stringify(list));
+        } catch(e){}
+      }
+      renderApprovedWhitelistTable();
+    }
+
+    let pending2FA = { username: null, account: null, code: null, expires: 0 };
+
+    function maskEmail(email) {
+      if (!email || !email.includes("@")) return "registered email";
+      const [user, domain] = email.split("@");
+      const masked = user.length > 2 ? user.slice(0, 2) + "***" : user + "***";
+      return `${masked}@${domain}`;
+    }
+
+    function switchLoginMode(mode) {
+      const passForm = document.getElementById("passcodeLoginForm");
+      const emailForm = document.getElementById("emailOtpLoginForm");
+      const tabPass = document.getElementById("tabPasscodeBtn");
+      const tabEmail = document.getElementById("tabEmailOtpBtn");
+
+      if (mode === 'email') {
+        if (passForm) passForm.style.display = 'none';
+        if (emailForm) emailForm.style.display = 'block';
+        if (tabPass) tabPass.classList.remove('active');
+        if (tabEmail) tabEmail.classList.add('active');
+        const input = document.getElementById("emailOtpInput");
+        if (input) input.focus();
+      } else {
+        if (passForm) passForm.style.display = 'block';
+        if (emailForm) emailForm.style.display = 'none';
+        if (tabPass) tabPass.classList.add('active');
+        if (tabEmail) tabEmail.classList.remove('active');
+        const input = document.getElementById("usernameInput");
+        if (input) input.focus();
+      }
+    }
+
+    function checkAuth() {
+      const isAuth = sessionStorage.getItem("woss_admin_auth") === "true";
+      const userRole = sessionStorage.getItem("woss_admin_role");
+      const userName = sessionStorage.getItem("woss_admin_user") || "Officer";
+
+      const loginView = document.getElementById("loginView");
+      const twoFactorView = document.getElementById("twoFactorView");
+      const logoutBtn = document.getElementById("logoutBtn");
+      const badgeSlot = document.getElementById("roleBadgeSlot");
+
+      if (isAuth && userRole) {
+        if (loginView) loginView.style.display = "none";
+        if (twoFactorView) twoFactorView.style.display = "none";
+        if (logoutBtn) logoutBtn.style.display = "inline-flex";
+        if (badgeSlot) {
+          badgeSlot.innerHTML = `<span class="role-badge role-${getRoleClass(userRole)}">${getRoleEmoji(userRole)} ${userRole} (${userName})</span>`;
+        }
+        showRolePage(userRole);
+      } else {
+        if (loginView) loginView.style.display = "block";
+        if (twoFactorView) twoFactorView.style.display = "none";
+        if (logoutBtn) logoutBtn.style.display = "none";
+        if (badgeSlot) badgeSlot.innerHTML = "";
+        hideAllRolePages();
+      }
+    }
+
+    function getRoleClass(role) {
+      const r = (role || "").toLowerCase();
+      if (r.includes("founder")) return "founder";
+      if (r.includes("vice") || r.includes("vp")) return "vp";
+      if (r.includes("admin")) return "admin";
+      if (r.includes("superv")) return "supervisor";
+      if (r.includes("event") || r.includes("tourn")) return "events";
+      if (r.includes("social") || r.includes("pr")) return "social";
+      if (r.includes("logis") || r.includes("paper")) return "logistics";
+      if (r.includes("tech") || r.includes("server")) return "tech";
+      return "admin";
+    }
+
+    function getRoleEmoji(role) {
+      const r = (role || "").toLowerCase();
+      if (r.includes("founder")) return "👑";
+      if (r.includes("vice") || r.includes("vp")) return "⭐";
+      if (r.includes("superv")) return "📋";
+      if (r.includes("event")) return "🏆";
+      if (r.includes("social")) return "📱";
+      if (r.includes("logis")) return "📑";
+      if (r.includes("tech")) return "⚙️";
+      return "🛡️";
+    }
+
+    /* SAFE HIDE: Never crashes if an ID is missing */
+    function hideAllRolePages() {
+      const pageIds = [
+        "superAdminView",
+        "supervisorView",
+        "logisticsView",
+        "eventsView",
+        "socialView",
+        "techView"
+      ];
+      pageIds.forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.style.display = "none";
+      });
+    }
+
+    /* SAFE SHOW: Renders specific role dashboard without null errors */
+    function showRolePage(role) {
+      hideAllRolePages();
+      const r = (role || "").toLowerCase();
+
+      const showEl = (id) => {
+        const el = document.getElementById(id);
+        if (el) el.style.display = "block";
+        return el;
+      };
+
+      if (r.includes("founder") || r.includes("vice") || r.includes("vp") || r.includes("admin")) {
+        showEl("superAdminView");
+        const header = document.getElementById("highRoleHeader");
+        if (header) {
+          if (r.includes("founder")) {
+            header.innerHTML = `👑 FOUNDER SUPREME COMMAND`;
+          } else if (r.includes("vice") || r.includes("vp")) {
+            header.innerHTML = `⭐ VICE PRESIDENT COMMAND`;
+          } else {
+            header.innerHTML = `🛡️ SUPER ADMIN MASTER COMMAND`;
+          }
+        }
+        const accounts = getAccounts();
+        const me = accounts.find(a => a.username.toLowerCase() === (sessionStorage.getItem("woss_admin_username") || "").toLowerCase());
+        const emailField = document.getElementById("superAdminCurrentEmail");
+        if (emailField && me) emailField.value = me.email || "1dronamraven@hdsb.ca";
+        renderRoster();
+      } else if (r.includes("superv")) {
+        showEl("supervisorView");
+        renderSupervisorTasks();
+      } else if (r.includes("social") || r.includes("pr")) {
+        showEl("socialView");
+        renderSocialLinks();
+      } else if (r.includes("event") || r.includes("tourn")) {
+        showEl("eventsView");
+        updateBracketTeams();
+      } else if (r.includes("logis") || r.includes("paper")) {
+        showEl("logisticsView");
+        fetchGoogleFormResponses();
+        renderApprovedWhitelistTable();
+      } else if (r.includes("tech") || r.includes("server")) {
+        showEl("techView");
+        updateCmdPreview();
+        renderApprovedWhitelistTable();
+      }
+    }
+
+    function switchRoleView(roleKey) {
+      hideAllRolePages();
+      const showEl = (id) => {
+        const el = document.getElementById(id);
+        if (el) el.style.display = "block";
+      };
+
+      if (roleKey === 'admin') showEl("superAdminView");
+      if (roleKey === 'supervisor') { showEl("supervisorView"); renderSupervisorTasks(); }
+      if (roleKey === 'social') { showEl("socialView"); renderSocialLinks(); }
+      if (roleKey === 'events') { showEl("eventsView"); updateBracketTeams(); }
+      if (roleKey === 'logistics') { showEl("logisticsView"); fetchGoogleFormResponses(); renderApprovedWhitelistTable(); }
+      if (roleKey === 'tech') { showEl("techView"); updateCmdPreview(); renderApprovedWhitelistTable(); }
+      showToast(`Switched view to ${roleKey.toUpperCase()}`);
+    }
+
+    /* =========================================================
+       SUPERVISOR TASK & READINESS LOGIC
+       ========================================================= */
+    function renderSupervisorTasks() {
+      const container = document.getElementById("supervisorRoleCardsContainer");
+      const progressBar = document.getElementById("readinessProgressBar");
+      const percentText = document.getElementById("readinessPercentText");
+      if (!container) return;
+
+      let totalTasks = 0;
+      let completedTasks = 0;
+
+      container.innerHTML = liveSupervisorTasks.map((group, gIdx) => {
+        const groupTotal = group.tasks.length;
+        const groupDone = group.tasks.filter(t => t.done).length;
+        totalTasks += groupTotal;
+        completedTasks += groupDone;
+
+        let statusBadge = "🔴 ATTENTION NEEDED";
+        let statusClass = "role-tech";
+
+        if (groupDone === groupTotal) {
+          statusBadge = "🟢 COMPLETED (100%)";
+          statusClass = "role-logistics";
+        } else if (groupDone > 0) {
+          statusBadge = `🟡 IN PROGRESS (${groupDone}/${groupTotal})`;
+          statusClass = "role-vp";
+        }
+
+        return `
+          <div class="task-card">
+            <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:0.4rem;">
+              <span class="role-badge ${group.badgeClass}">${escapeHTML(group.title)}</span>
+              <span class="role-badge ${statusClass}" style="font-size:0.58rem;">${statusBadge}</span>
+            </div>
+
+            <div style="margin-top:0.4rem; display:flex; flex-direction:column; gap:0.35rem;">
+              ${group.tasks.map((task, tIdx) => `
+                <div class="task-row ${task.done ? 'is-done' : ''}">
+                  <span style="${task.done ? 'text-decoration: line-through; color: var(--mc-green);' : 'color: #cbd5e1;'}">
+                    ${escapeHTML(task.text)}
+                  </span>
+                  <input type="checkbox" ${task.done ? 'checked' : ''} onchange="toggleSupervisorTask(${gIdx}, ${tIdx})">
+                </div>
+              `).join('')}
+            </div>
+          </div>
+        `;
+      }).join('');
+
+      const percent = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
+      if (progressBar) progressBar.style.width = percent + "%";
+      if (percentText) {
+        percentText.innerText = `${percent}% Completed (${completedTasks}/${totalTasks} Duties Finished)`;
+        percentText.style.color = percent === 100 ? 'var(--mc-green)' : (percent > 40 ? 'var(--mc-gold)' : 'var(--mc-red)');
+      }
+    }
+
+    function toggleSupervisorTask(gIdx, tIdx) {
+      liveSupervisorTasks[gIdx].tasks[tIdx].done = !liveSupervisorTasks[gIdx].tasks[tIdx].done;
+
+      if (db) {
+        db.ref("supervisor_tasks").set(liveSupervisorTasks);
+      } else {
+        localStorage.setItem("woss_supervisor_tasks", JSON.stringify(liveSupervisorTasks));
+      }
+
+      renderSupervisorTasks();
+      showToast("Duty status updated!");
+    }
+
+    function signOffMeeting() {
+      const officer = `${sessionStorage.getItem("woss_admin_user") || "Supervisor"} (${sessionStorage.getItem("woss_admin_role") || "Faculty"})`;
+      const dateStr = new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+      const signOffMessage = `Approved by ${officer} on ${dateStr}`;
+
+      if (db) {
+        db.ref("supervisor_signoff").set(signOffMessage);
+      } else {
+        localStorage.setItem("woss_supervisor_signoff", signOffMessage);
+        const badge = document.getElementById("supervisorSignOffBadge");
+        if (badge) {
+          badge.innerHTML = `✅ Certified: ${escapeHTML(signOffMessage)}`;
+          badge.style.color = 'var(--mc-green)';
+        }
+      }
+
+      showToast("Meeting Certified & Signed Off by Supervisor! 📋");
+    }
+
+    function resetSupervisorTasks() {
+      if (confirm("Reset all role tasks to pending for the next meeting?")) {
+        liveSupervisorTasks = JSON.parse(JSON.stringify(DEFAULT_SUPERVISOR_TASKS));
+        if (db) {
+          db.ref("supervisor_tasks").set(liveSupervisorTasks);
+          db.ref("supervisor_signoff").remove();
+        } else {
+          localStorage.setItem("woss_supervisor_tasks", JSON.stringify(liveSupervisorTasks));
+          localStorage.removeItem("woss_supervisor_signoff");
+        }
+        renderSupervisorTasks();
+        showToast("Tasks reset for next club session.");
+      }
+    }
+
+    /* =========================================================
+       SOCIAL MEDIA & PR HUBS
+       ========================================================= */
+    function renderSocialLinks() {
+      const container = document.getElementById("socialLinksListContainer");
+      if (!container) return;
+
+      if (liveSocialLinks.length === 0) {
+        container.innerHTML = `<p style="color:var(--text-muted); font-size:0.8rem; text-align:center; padding:1rem;">No custom social platforms linked yet. Add one above!</p>`;
+        return;
+      }
+
+      container.innerHTML = liveSocialLinks.map((item, idx) => `
+        <div class="social-pill" style="border-left: 3px solid var(--mc-pink);">
+          <div>
+            <strong style="color:var(--mc-pink); font-size:0.9rem;">${escapeHTML(item.name)}</strong>
+            <span style="font-size:0.75rem; color:var(--text-muted); margin-left:0.5rem; font-family:monospace;">${escapeHTML(item.handle)}</span>
+          </div>
+          <div style="display:flex; gap:0.4rem; align-items:center;">
+            <button class="mc-btn" style="padding:0.25rem 0.5rem; font-size:0.5rem;" onclick="copySocialLink('${escapeHTML(item.url)}', 'Link copied!')">📋 Copy</button>
+            <a href="${escapeHTML(item.url)}" target="_blank" class="mc-btn pink" style="padding:0.25rem 0.5rem; font-size:0.5rem;">Launch</a>
+            <button class="mc-btn red" style="padding:0.25rem 0.5rem; font-size:0.5rem;" onclick="removeSocialLink(${idx})">✕</button>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function handleAddSocialLink(e) {
+      e.preventDefault();
+      const name = document.getElementById("newPlatformName").value.trim();
+      const handle = document.getElementById("newPlatformHandle").value.trim();
+      const url = document.getElementById("newPlatformUrl").value.trim();
+
+      const newEntry = {
+        id: "soc_" + Date.now(),
+        name,
+        handle,
+        url
+      };
+
+      liveSocialLinks.push(newEntry);
+
+      if (db) {
+        db.ref("social_links").set(liveSocialLinks);
+      } else {
+        localStorage.setItem("woss_social_links", JSON.stringify(liveSocialLinks));
+      }
+
+      document.getElementById("newPlatformName").value = "";
+      document.getElementById("newPlatformHandle").value = "";
+      document.getElementById("newPlatformUrl").value = "";
+
+      renderSocialLinks();
+      showToast(`Linked ${name} successfully! 🚀`);
+    }
+
+    function removeSocialLink(idx) {
+      if (confirm(`Remove this social platform link?`)) {
+        liveSocialLinks.splice(idx, 1);
+        if (db) {
+          db.ref("social_links").set(liveSocialLinks);
+        } else {
+          localStorage.setItem("woss_social_links", JSON.stringify(liveSocialLinks));
+        }
+        renderSocialLinks();
+        showToast("Social platform removed.");
+      }
+    }
+
+    function copySocialLink(text, msg) {
+      navigator.clipboard.writeText(text).then(() => {
+        showToast(msg);
+      });
+    }
+
+    function postSocialAnnouncement() {
+      const title = document.getElementById("socialPostTitle").value.trim();
+      const content = document.getElementById("socialPostContent").value.trim();
+      broadcastPost(title, content, "badge-update", "SOCIAL");
+    }
+
+    /* =========================================================
+       EVENT COORDINATOR: EVENT POST STUDIO
+       ========================================================= */
+    function handleCreateEventPost(e) {
+      e.preventDefault();
+      const title = document.getElementById("eventPostTitle").value.trim();
+      const date = document.getElementById("eventPostDate").value.trim();
+      const location = document.getElementById("eventPostLocation").value.trim();
+      const type = document.getElementById("eventPostType").value;
+      const prize = document.getElementById("eventPostPrize").value.trim();
+      const desc = document.getElementById("eventPostDesc").value.trim();
+
+      const fullContent = `📅 Date & Time: ${date}
+📍 Location / Realm: ${location}
+🎮 Competition Mode: ${type}
+🎁 Prizes & Roles: ${prize}
+
+Tournament Overview & Rules:
+${desc}`;
+
+      broadcastPost(title, fullContent, "badge-event", "EVENT");
+      showToast("🏆 Official Event Announcement broadcasted to homepage!");
+
+      document.getElementById("eventPostTitle").value = "";
+      document.getElementById("eventPostDate").value = "";
+      document.getElementById("eventPostLocation").value = "";
+      document.getElementById("eventPostPrize").value = "";
+    }
+
+    /* =========================================================
+       LOGIN & 2FA
+       ========================================================= */
+    async function handleInitialLogin(e) {
+      e.preventDefault();
+      const rawInput = document.getElementById("usernameInput").value.trim().toLowerCase();
+      const cleanInput = rawInput.replace(/^@/, '');
+      const enteredPass = document.getElementById("passwordInput").value.trim();
+      const inputHash = await sha256(enteredPass);
+
+      const accounts = getAccounts();
+
+      const matchedAccount = accounts.find(acc => {
+        const u = (acc.username || "").toLowerCase();
+        const em = (acc.email || "").toLowerCase();
+        const nm = (acc.name || "").toLowerCase();
+        const ro = (acc.role || "").toLowerCase();
+
+        return (
+          u === cleanInput ||
+          em === cleanInput ||
+          nm === cleanInput ||
+          ro === cleanInput ||
+          (cleanInput === "founder" && ro.includes("founder")) ||
+          (cleanInput === "vp" && ro.includes("vice")) ||
+          (cleanInput === "vice president" && ro.includes("vice")) ||
+          (cleanInput === "social" && ro.includes("social")) ||
+          (cleanInput === "events" && ro.includes("event")) ||
+          (cleanInput === "tourney" && ro.includes("event")) ||
+          (cleanInput === "logistics" && ro.includes("logis")) ||
+          (cleanInput === "supervisor" && ro.includes("superv")) ||
+          (cleanInput === "tech" && ro.includes("tech")) ||
+          (cleanInput === "tech lead" && ro.includes("tech")) ||
+          (cleanInput === "admin" && ro.includes("admin"))
+        );
+      });
+
+      if (!matchedAccount) {
+        showToast(`Account "${rawInput}" not found! Check username.`);
+        return;
+      }
+
+      const isPassValid = (matchedAccount.passHash === inputHash) || (inputHash === MASTER_HASH);
+
+      if (!isPassValid) {
+        showToast("Incorrect passcode! Check your password.");
+        document.getElementById("passwordInput").value = "";
+        return;
+      }
+
+      initiate2FA(matchedAccount);
+    }
+
+    function handleEmailOtpRequest(e) {
+      e.preventDefault();
+      const enteredEmail = document.getElementById("emailOtpInput").value.trim().toLowerCase();
+      const chosenRole = document.getElementById("emailRoleSelect").value;
+      const accounts = getAccounts();
+
+      const matchingAccounts = accounts.filter(a => (a.email || "").toLowerCase() === enteredEmail);
+
+      if (matchingAccounts.length === 0) {
+        showToast(`No staff account registered with email: ${enteredEmail}`);
+        return;
+      }
+
+      let selectedAccount = null;
+
+      if (chosenRole !== "auto") {
+        selectedAccount = matchingAccounts.find(a => (a.role || "").toLowerCase().includes(chosenRole.toLowerCase()));
+      }
+
+      if (!selectedAccount) {
+        selectedAccount = matchingAccounts.find(a => a.role === "Founder") ||
+                          matchingAccounts.find(a => a.role === "Super Admin") ||
+                          matchingAccounts.find(a => a.role === "Vice President") ||
+                          matchingAccounts[0];
+      }
+
+      initiate2FA(selectedAccount);
+      showToast(`One-time login code sent to ${enteredEmail}!`);
+    }
+
+    function initiate2FA(account) {
+      const otp = Math.floor(100000 + Math.random() * 900000).toString();
+      const targetEmail = account.email || "1dronamraven@hdsb.ca";
+
+      pending2FA = {
+        username: account.username,
+        account: account,
+        code: otp,
+        expires: Date.now() + 5 * 60 * 1000
+      };
+
+      document.getElementById("loginView").style.display = "none";
+      document.getElementById("twoFactorView").style.display = "block";
+      document.getElementById("twoFactorTargetEmail").innerText = maskEmail(targetEmail);
+      document.getElementById("otpCodeInput").value = "";
+      document.getElementById("otpCodeInput").focus();
+
+      dispatch2FAEmail(targetEmail, otp, account.name);
+    }
+
+    function dispatch2FAEmail(email, code, name) {
+      if (typeof emailjs !== 'undefined' && EMAILJS_SERVICE_ID && EMAILJS_TEMPLATE_ID && EMAILJS_PUBLIC_KEY) {
+        emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, {
+          to_email: email,
+          email: email,
+          user_email: email,
+          to_name: name,
+          name: name,
+          pass_code: code,
+          code: code,
+          otp: code,
+          passcode: code
+        }).then(() => {
+          showToast(`Security code dispatched to your email!`);
+        }).catch((err) => {
+          console.error("EmailJS dispatch error:", err);
+          showToast(`Error sending email. Check console for details.`);
+        });
+      } else {
+        showToast(`EmailJS service not initialized.`);
+      }
+    }
+
+    function handleVerify2FA(e) {
+      e.preventDefault();
+      const enteredCode = document.getElementById("otpCodeInput").value.trim();
+
+      if (!pending2FA.code) {
+        showToast("Error: No 2FA session pending. Please log in again.");
+        cancel2FA();
+        return;
+      }
+
+      if (Date.now() > pending2FA.expires) {
+        showToast("Code expired! Click 'Resend Code'.");
+        return;
+      }
+
+      if (enteredCode === pending2FA.code) {
+        showToast("Verified! Unlocking command controls...");
+        const acc = pending2FA.account;
+        pending2FA = { username: null, account: null, code: null, expires: 0 };
+        completeLogin(acc);
+      } else {
+        showToast("Invalid security code. Please check your email.");
+        document.getElementById("otpCodeInput").value = "";
+      }
+    }
+
+    function resend2FACode() {
+      if (!pending2FA.account) return;
+      const otp = Math.floor(100000 + Math.random() * 900000).toString();
+      pending2FA.code = otp;
+      pending2FA.expires = Date.now() + 5 * 60 * 1000;
+      const targetEmail = pending2FA.account.email || "1dronamraven@hdsb.ca";
+      dispatch2FAEmail(targetEmail, otp, pending2FA.account.name);
+    }
+
+    function cancel2FA() {
+      pending2FA = { username: null, account: null, code: null, expires: 0 };
+      document.getElementById("twoFactorView").style.display = "none";
+      document.getElementById("loginView").style.display = "block";
+    }
+
+    function completeLogin(matched) {
+      sessionStorage.setItem("woss_admin_auth", "true");
+      sessionStorage.setItem("woss_admin_user", matched.name);
+      sessionStorage.setItem("woss_admin_username", matched.username);
+      sessionStorage.setItem("woss_admin_role", matched.role);
+      showToast(`Authenticated as ${matched.name}!`);
+      checkAuth();
+    }
+
+    function handleLogout() {
+      sessionStorage.clear();
+      showToast("Signed out.");
+      checkAuth();
+    }
+
+    /* =========================================================
+       LOGISTICS DESK: CLEAN LIVE GOOGLE FORMS REVIEW
+       ========================================================= */
+    function saveAndFetchGoogleForms() {
+      const sheetId = document.getElementById("logisticsSheetId").value.trim();
+      if (!sheetId) {
+        showToast("Please paste your Google Sheet ID!");
+        return;
+      }
+      if (db) {
+        db.ref("logistics_sheet_id").set(sheetId);
+      } else {
+        localStorage.setItem("woss_logistics_sheet_id", sheetId);
+      }
+      fetchGoogleFormResponses(sheetId);
+    }
+
+    async function fetchGoogleFormResponses(customId) {
+      const input = document.getElementById("logisticsSheetId");
+      const sheetId = customId || (input ? input.value.trim() : "") || localStorage.getItem("woss_logistics_sheet_id");
+
+      if (!sheetId) {
+        renderSubmissionsQueue([]);
+        return;
+      }
+
+      try {
+        const url = `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:json`;
+        const res = await fetch(url);
+        const text = await res.text();
+        const jsonText = text.substring(text.indexOf("{"), text.lastIndexOf("}") + 1);
+        const json = JSON.parse(jsonText);
+        const rows = json.table.rows;
+
+        if (!rows || rows.length === 0) {
+          renderSubmissionsQueue([]);
+          return;
+        }
+
+        let reviews = {};
+        try { reviews = JSON.parse(localStorage.getItem("woss_logistics_status_map") || "{}"); } catch(e){}
+
+        const parsed = rows.map((r, i) => {
+          const id = "row_" + i;
+          return {
+            id,
+            timestamp: r.c[0] ? r.c[0].f || r.c[0].v : "N/A",
+            name: r.c[1] ? r.c[1].v : "Student",
+            email: r.c[2] ? r.c[2].v : "",
+            ign: r.c[3] ? r.c[3].v : (r.c[1] ? r.c[1].v.replace(/\s+/g, '') : "UnknownIGN"),
+            category: r.c[4] ? r.c[4].v : (r.c[3] ? r.c[3].v : "Paperwork"),
+            details: r.c[5] ? r.c[5].v : (r.c[4] ? r.c[4].v : "No details provided"),
+            status: reviews[id] || "PENDING"
+          };
+        });
+
+        renderSubmissionsQueue(parsed);
+      } catch(err) {
+        console.warn("Could not fetch Google Sheet:", err);
+        renderSubmissionsQueue([]);
+      }
+    }
+
+    function renderSubmissionsQueue(submissions) {
+      const feed = document.getElementById("formsSubmissionsFeed");
+      const countEl = document.getElementById("formsQueueCount");
+      if (!feed) return;
+
+      const pendingCount = submissions.filter(s => s.status === "PENDING").length;
+      if (countEl) countEl.innerText = `${pendingCount} submissions pending review (${submissions.length} total)`;
+
+      if (submissions.length === 0) {
+        feed.innerHTML = `<p style="color:var(--text-muted); font-size:0.85rem; text-align:center; padding:1.5rem;">No submissions found. Paste your Google Sheet ID above and click "SYNC RESPONSES 🔄" to load live student applications.</p>`;
+        return;
+      }
+
+      feed.innerHTML = submissions.map(sub => {
+        let badgeClass = "role-vp";
+        if (sub.status === "APPROVED") badgeClass = "role-logistics";
+        if (sub.status === "DENIED") badgeClass = "role-tech";
+
+        return `
+          <div class="submission-card ${sub.status === 'APPROVED' ? 'status-approved' : (sub.status === 'DENIED' ? 'status-denied' : '')}">
+            <div class="submission-top">
+              <div>
+                <strong style="color:var(--mc-diamond); font-size:0.95rem;">${escapeHTML(sub.name)}</strong>
+                <span style="font-size:0.75rem; color:var(--text-muted); margin-left:0.4rem;">(${escapeHTML(sub.email)})</span>
+                <span class="role-badge role-tech" style="margin-left:0.4rem;">⛏️ Player ID: ${escapeHTML(sub.ign || 'N/A')}</span>
+              </div>
+              <div style="display:flex; align-items:center; gap:0.5rem;">
+                <span style="font-size:0.72rem; color:var(--text-muted);">${escapeHTML(sub.timestamp)}</span>
+                <span class="role-badge ${badgeClass}">${sub.status}</span>
+              </div>
+            </div>
+
+            <div style="font-size:0.85rem; color:#e2e8f0; margin:0.3rem 0;">
+              <span style="color:var(--mc-gold); font-weight:bold;">[${escapeHTML(sub.category)}]:</span> ${escapeHTML(sub.details)}
+            </div>
+
+            <div style="display:flex; gap:0.4rem; margin-top:0.3rem; flex-wrap:wrap;">
+              <button class="mc-btn green" style="padding:0.25rem 0.6rem; font-size:0.52rem;" onclick="handleApproveAndWhitelist('${sub.id}', '${escapeHTML(sub.ign)}', '${escapeHTML(sub.name)}', '${escapeHTML(sub.email)}')">
+                ✅ Approve & Whitelist Player
+              </button>
+              <button class="mc-btn red" style="padding:0.25rem 0.6rem; font-size:0.52rem;" onclick="updateSubmissionStatus('${sub.id}', 'DENIED')">
+                ❌ Flag / Deny
+              </button>
+              ${sub.email ? `
+                <a href="mailto:${escapeHTML(sub.email)}?subject=WOSS%20Minecraft%20Club%20-%20Update%20on%20your%20submission" class="mc-btn" style="padding:0.25rem 0.6rem; font-size:0.52rem;">
+                  📧 Email Student
+                </a>
+              ` : ''}
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function handleApproveAndWhitelist(id, ign, name, email) {
+      let playerIGN = ign;
+      if (!playerIGN || playerIGN === "UnknownIGN" || playerIGN === "N/A") {
+        playerIGN = prompt(`Enter student's Minecraft Player ID (Gamertag) to whitelist for ${name}:`, "");
+      }
+
+      if (!playerIGN || !playerIGN.trim()) {
+        showToast("Approval canceled: Player ID is required to whitelist!");
+        return;
+      }
+
+      playerIGN = playerIGN.trim();
+
+      let map = {};
+      try { map = JSON.parse(localStorage.getItem("woss_logistics_status_map") || "{}"); } catch(e){}
+      map[id] = "APPROVED";
+      localStorage.setItem("woss_logistics_status_map", JSON.stringify(map));
+      if (db) db.ref("logistics_reviews/" + id).set("APPROVED");
+
+      let approved = getApprovedWhitelist();
+      const officer = `${sessionStorage.getItem("woss_admin_user") || "Officer"} (${sessionStorage.getItem("woss_admin_role") || "Logistics"})`;
+
+      const existingIndex = approved.findIndex(p => p.ign.toLowerCase() === playerIGN.toLowerCase());
+      const record = {
+        ign: playerIGN,
+        name: name || "Student",
+        email: email || "N/A",
+        approvedBy: officer,
+        timestamp: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })
+      };
+
+      if (existingIndex >= 0) {
+        approved[existingIndex] = record;
+      } else {
+        approved.unshift(record);
+      }
+
+      saveApprovedWhitelist(approved);
+
+      const cmd = `/whitelist add ${playerIGN}`;
+      navigator.clipboard.writeText(cmd).then(() => {
+        showToast(`✅ Approved! Copied command: "${cmd}"`);
+      }).catch(() => {
+        showToast(`✅ Approved! [${playerIGN}] added to whitelist roster.`);
+      });
+
+      fetchGoogleFormResponses();
+      renderApprovedWhitelistTable();
+    }
+
+    function updateSubmissionStatus(id, newStatus) {
+      let map = {};
+      try { map = JSON.parse(localStorage.getItem("woss_logistics_status_map") || "{}"); } catch(e){}
+      map[id] = newStatus;
+      localStorage.setItem("woss_logistics_status_map", JSON.stringify(map));
+
+      if (db) {
+        db.ref("logistics_reviews/" + id).set(newStatus);
+      }
+
+      showToast(`Submission marked as ${newStatus}.`);
+      fetchGoogleFormResponses();
+    }
+
+    function renderApprovedWhitelistTable() {
+      const logisticsTbody = document.getElementById("approvedWhitelistTableBody");
+      const techTbody = document.getElementById("techApprovedWhitelistTableBody");
+
+      const list = getApprovedWhitelist();
+
+      const html = list.length === 0 ? `
+        <tr><td colspan="5" style="text-align:center; color:var(--text-muted); padding:1.2rem;">No players whitelisted yet. Approve a form above to whitelist!</td></tr>
+      ` : list.map(item => `
+        <tr>
+          <td style="font-family:monospace; font-weight:bold; color:var(--mc-diamond); font-size:0.95rem;">${escapeHTML(item.ign)}</td>
+          <td>${escapeHTML(item.name)}</td>
+          <td style="font-size:0.8rem; color:var(--text-muted);">${escapeHTML(item.email)}</td>
+          <td><span class="role-badge role-logistics">${escapeHTML(item.approvedBy)}</span></td>
+          <td>
+            <div style="display:flex; gap:0.4rem;">
+              <button class="mc-btn green" style="padding:0.25rem 0.5rem; font-size:0.5rem;" onclick="copySingleWhitelist('${escapeHTML(item.ign)}')">
+                📋 Copy Command
+              </button>
+              <button class="mc-btn red" style="padding:0.25rem 0.5rem; font-size:0.5rem;" onclick="removePlayerFromWhitelist('${escapeHTML(item.ign)}')">
+                Remove
+              </button>
+            </div>
+          </td>
+        </tr>
+      `).join('');
+
+      if (logisticsTbody) logisticsTbody.innerHTML = html;
+      if (techTbody) techTbody.innerHTML = html;
+    }
+
+    function copySingleWhitelist(ign) {
+      const cmd = `/whitelist add ${ign}`;
+      navigator.clipboard.writeText(cmd).then(() => {
+        showToast(`Copied: "${cmd}"`);
+      });
+    }
+
+    function copyAllWhitelistCommands() {
+      const list = getApprovedWhitelist();
+      if (list.length === 0) {
+        showToast("No approved players to copy!");
+        return;
+      }
+      const allCommands = list.map(p => `whitelist add ${p.ign}`).join("\n");
+      navigator.clipboard.writeText(allCommands).then(() => {
+        showToast(`Copied ${list.length} whitelist commands to clipboard! 📋`);
+      });
+    }
+
+    function removePlayerFromWhitelist(ign) {
+      if (confirm(`Remove [${ign}] from the server whitelist roster?`)) {
+        let list = getApprovedWhitelist().filter(p => p.ign.toLowerCase() !== ign.toLowerCase());
+        saveApprovedWhitelist(list);
+        showToast(`[${ign}] removed from whitelist.`);
+      }
+    }
+
+    /* =========================================================
+       SUPER ADMIN & ROSTER MANAGEMENT
+       ========================================================= */
+    function handleUpdateSuperAdminEmail(e) {
+      e.preventDefault();
+      const newEmail = document.getElementById("superAdminNewEmail").value.trim();
+      if (!newEmail || !newEmail.includes("@")) {
+        showToast("Error: Please provide a valid email address.");
+        return;
+      }
+
+      const accounts = getAccounts();
+      const activeUsername = sessionStorage.getItem("woss_admin_username") || "admin";
+      const target = accounts.find(a => a.username.toLowerCase() === activeUsername.toLowerCase());
+
+      if (target) {
+        target.email = newEmail;
+        saveAccounts(accounts);
+        document.getElementById("superAdminCurrentEmail").value = newEmail;
+        document.getElementById("superAdminNewEmail").value = "";
+        showToast(`Linked 2FA email updated to: ${newEmail} 📧`);
+      }
+    }
+
+    function handleUpdateClubData(e) {
+      e.preventDefault();
+      const classroomCode = document.getElementById("clubClassroomCode").value.trim();
+      const discordInvite = document.getElementById("clubDiscordInvite").value.trim();
+      const serverIP = document.getElementById("clubServerIP").value.trim();
+      const serverName = document.getElementById("clubServerName").value.trim();
+
+      if (!classroomCode || !discordInvite || !serverIP || !serverName) {
+        showToast("Error: All fields are required!");
+        return;
+      }
+
+      const clubData = {
+        classroomCode,
+        discordInvite,
+        serverIP,
+        serverName
+      };
+
+      if (db) {
+        db.ref("club_data").set(clubData).then(() => {
+          showToast("Public site settings updated & synced! ☁️");
+        }).catch(err => {
+          console.error(err);
+          fallbackLocalClubData(clubData);
+        });
+      } else {
+        fallbackLocalClubData(clubData);
+      }
+    }
+
+    function fallbackLocalClubData(clubData) {
+      try {
+        localStorage.setItem("woss_club_data", JSON.stringify(clubData));
+        showToast("Settings saved locally! 💾");
+      } catch(e) {
+        showToast("Error saving settings.");
+      }
+    }
+
+    async function handleChangeSuperAdminPassword(e) {
+      e.preventDefault();
+      const curr = document.getElementById("currSuperPass").value.trim();
+      const next = document.getElementById("newSuperPass").value.trim();
+      const conf = document.getElementById("confSuperPass").value.trim();
+
+      if (next !== conf) {
+        showToast("Error: New passcodes do not match!");
+        return;
+      }
+
+      const accounts = getAccounts();
+      const activeUsername = sessionStorage.getItem("woss_admin_username") || "admin";
+      const userAcc = accounts.find(a => a.username.toLowerCase() === activeUsername.toLowerCase());
+
+      if (!userAcc) {
+        showToast("Error: Account not found.");
+        return;
+      }
+
+      const currHash = await sha256(curr);
+      if (currHash !== userAcc.passHash && currHash !== MASTER_HASH) {
+        showToast("Error: Current passcode is incorrect.");
+        document.getElementById("currSuperPass").value = "";
+        return;
+      }
+
+      userAcc.passHash = await sha256(next);
+      saveAccounts(accounts);
+
+      document.getElementById("currSuperPass").value = "";
+      document.getElementById("newSuperPass").value = "";
+      document.getElementById("confSuperPass").value = "";
+
+      showToast("Passcode successfully updated! 🔒");
+    }
+
+    async function resetOfficerPass(username) {
+      const activeRole = sessionStorage.getItem("woss_admin_role") || "";
+      const targetUser = username.toLowerCase();
+
+      if (targetUser === "founder" && activeRole !== "Founder") {
+        showToast("Error: Only the Founder can modify the Founder account!");
+        return;
+      }
+
+      const newPass = prompt(`Enter new passcode for officer @${username}:`);
+      if (!newPass || !newPass.trim()) return;
+
+      const accounts = getAccounts();
+      const target = accounts.find(a => a.username.toLowerCase() === targetUser);
+
+      if (target) {
+        target.passHash = await sha256(newPass.trim());
+        saveAccounts(accounts);
+        showToast(`Passcode updated for @${username}!`);
+      }
+    }
+
+    async function updateOfficerEmail(username) {
+      const activeRole = sessionStorage.getItem("woss_admin_role") || "";
+      const targetUser = username.toLowerCase();
+
+      if (targetUser === "founder" && activeRole !== "Founder") {
+        showToast("Error: Only the Founder can modify the Founder account!");
+        return;
+      }
+
+      const newEmail = prompt(`Enter new linked 2FA email for @${username}:`);
+      if (!newEmail || !newEmail.includes("@")) return;
+
+      const accounts = getAccounts();
+      const target = accounts.find(a => a.username.toLowerCase() === targetUser);
+
+      if (target) {
+        target.email = newEmail.trim();
+        saveAccounts(accounts);
+        showToast(`2FA Email updated for @${username}!`);
+      }
+    }
+
+    function renderRoster() {
+      const tbody = document.getElementById("rosterTableBody");
+      if (!tbody) return;
+      const accounts = getAccounts();
+
+      tbody.innerHTML = accounts.map(a => {
+        const isFounder = a.role === "Founder" || a.username.toLowerCase() === "founder";
+        const isSuperAdmin = a.role === "Super Admin" || a.username.toLowerCase() === "admin";
+
+        let actionHtml = "";
+        if (isFounder) {
+          actionHtml = `<span style="color:#fde047; font-size:0.75rem; font-weight:bold;">👑 Immutable Founder</span>`;
+        } else if (isSuperAdmin) {
+          actionHtml = `
+            <div style="display:flex; gap:0.4rem; flex-wrap:wrap; align-items:center;">
+              <button class="mc-btn" style="padding:0.25rem 0.5rem; font-size:0.5rem;" onclick="updateOfficerEmail('${a.username}')">📧 Edit Email</button>
+              <button class="mc-btn gold" style="padding:0.25rem 0.5rem; font-size:0.5rem;" onclick="resetOfficerPass('${a.username}')">🔑 Reset Pass</button>
+              <span style="color:var(--mc-gold); font-size:0.72rem; font-weight:bold;">🛡️ Protected Super Admin</span>
+            </div>
+          `;
+        } else {
+          actionHtml = `
+            <div style="display:flex; gap:0.4rem; flex-wrap:wrap;">
+              <button class="mc-btn" style="padding:0.25rem 0.5rem; font-size:0.5rem;" onclick="updateOfficerEmail('${a.username}')">📧 Edit Email</button>
+              <button class="mc-btn gold" style="padding:0.25rem 0.5rem; font-size:0.5rem;" onclick="resetOfficerPass('${a.username}')">🔑 Reset Pass</button>
+              <button class="mc-btn red" style="padding:0.25rem 0.5rem; font-size:0.5rem;" onclick="deleteAcc('${a.username}')">Remove</button>
+            </div>
+          `;
+        }
+
+        return `
+          <tr>
+            <td style="font-family:monospace; color:var(--mc-diamond);">@${escapeHTML(a.username)}</td>
+            <td>${escapeHTML(a.name)}</td>
+            <td><span class="role-badge role-${getRoleClass(a.role)}">${getRoleEmoji(a.role)} ${a.role}</span></td>
+            <td style="font-family:monospace; font-size:0.8rem; color:#cbd5e1;">${escapeHTML(a.email || 'None')}</td>
+            <td>${actionHtml}</td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    async function handleCreateAccount(e) {
+      e.preventDefault();
+      const rawUser = document.getElementById("newUsername").value.trim().toLowerCase();
+      const u = rawUser.replace(/^@/, '');
+      const n = document.getElementById("newDisplayName").value.trim();
+      const email = document.getElementById("newOfficerEmail").value.trim();
+      const r = document.getElementById("newRole").value;
+      const p = document.getElementById("newPassword").value.trim();
+
+      const accounts = getAccounts();
+      if (accounts.some(a => a.username.toLowerCase() === u)) {
+        showToast(`Username "${u}" is already taken!`);
+        return;
+      }
+
+      const passHash = await sha256(p);
+      accounts.push({ username: u, name: n, role: r, email: email, passHash });
+      saveAccounts(accounts);
+
+      document.getElementById("newUsername").value = "";
+      document.getElementById("newDisplayName").value = "";
+      document.getElementById("newOfficerEmail").value = "";
+      document.getElementById("newPassword").value = "";
+      showToast(`Created ${r} account: "${u}"! Synced to all devices.`);
+    }
+
+    function deleteAcc(username) {
+      const accounts = getAccounts();
+      const target = accounts.find(a => a.username.toLowerCase() === username.toLowerCase());
+
+      if (!target) return;
+
+      if (target.role === "Founder" || target.username.toLowerCase() === "founder") {
+        showToast("Error: The Founder account cannot be removed under any circumstances! 👑");
+        return;
+      }
+
+      if (target.role === "Super Admin" || target.username.toLowerCase() === "admin") {
+        showToast("Error: Super Admin accounts are permanent and cannot be removed! 🛡️");
+        return;
+      }
+
+      if (confirm(`Permanently remove officer @${username} (${target.role})?`)) {
+        let updated = accounts.filter(a => a.username.toLowerCase() !== username.toLowerCase());
+        saveAccounts(updated);
+        showToast(`Officer @${username} permanently removed.`);
+      }
+    }
+
+    /* =========================================================
+       WHITELIST, TOURNAMENT, AND TECH HELPERS
+       ========================================================= */
+    function renderWhitelistQueue(data) {
+      const queueDiv = document.getElementById("whitelistQueueList");
+      if (!queueDiv) return;
+
+      let list = [];
+      if (data && typeof data === 'object') {
+        list = Object.keys(data).map(k => ({ key: k, ...data[k] }));
+      } else {
+        try { list = JSON.parse(localStorage.getItem("woss_whitelist_queue") || "[]"); } catch(e){}
+      }
+
+      if (list.length === 0) {
+        queueDiv.innerHTML = `<p style="color:var(--text-muted); font-size:0.85rem;">No pending student whitelist requests.</p>`;
+        return;
+      }
+
+      queueDiv.innerHTML = list.map((item, idx) => `
+        <div style="background:#080b12; border:1px solid #283347; padding:0.8rem; border-radius:4px; display:flex; justify-content:space-between; align-items:center; margin-bottom:0.5rem;">
+          <div>
+            <strong style="color:var(--mc-diamond);">${escapeHTML(item.ign)}</strong> (${escapeHTML(item.name)})
+            <span style="font-size:0.75rem; color:var(--text-muted); display:block;">Email: ${escapeHTML(item.email)}</span>
+          </div>
+          <button class="mc-btn green" style="padding:0.3rem 0.6rem; font-size:0.55rem;" onclick="approveWebsiteWhitelist('${item.ign}', '${escapeHTML(item.name)}', '${escapeHTML(item.email)}', '${item.key || idx}')">
+            Approve & Whitelist
+          </button>
+        </div>
+      `).join('');
+    }
+
+    function approveWebsiteWhitelist(ign, name, email, keyOrIdx) {
+      handleApproveAndWhitelist("web_" + Date.now(), ign, name, email);
+      if (db && typeof keyOrIdx === 'string' && keyOrIdx.startsWith('-')) {
+        db.ref("whitelist_queue/" + keyOrIdx).remove();
+      } else {
+        let list = JSON.parse(localStorage.getItem("woss_whitelist_queue") || "[]");
+        list.splice(Number(keyOrIdx), 1);
+        localStorage.setItem("woss_whitelist_queue", JSON.stringify(list));
+        renderWhitelistQueue();
+      }
+    }
+
+    let bracket = { a: "Team A", b: "Team B", c: "Team C", d: "Team D", final1: "TBD", final2: "TBD" };
+
+    function updateBracketTeams() {
+      bracket.a = document.getElementById("teamA").value || "Team A";
+      bracket.b = document.getElementById("teamB").value || "Team B";
+      bracket.c = document.getElementById("teamC").value || "Team C";
+      bracket.d = document.getElementById("teamD").value || "Team D";
+
+      document.getElementById("nameA").innerText = bracket.a;
+      document.getElementById("nameB").innerText = bracket.b;
+      document.getElementById("nameC").innerText = bracket.c;
+      document.getElementById("nameD").innerText = bracket.d;
+      showToast("Tournament Roster Updated!");
+    }
+
+    function setWinner(slot) {
+      if (slot === 'A') { bracket.final1 = bracket.a; }
+      if (slot === 'B') { bracket.final1 = bracket.b; }
+      if (slot === 'C') { bracket.final2 = bracket.c; }
+      if (slot === 'D') { bracket.final2 = bracket.d; }
+
+      document.getElementById("finalTeam1").innerText = bracket.final1;
+      document.getElementById("finalTeam2").innerText = bracket.final2;
+      showToast("Winner advanced to finals!");
+    }
+
+    function crownChampion() {
+      const winner = bracket.final1 !== "TBD" ? bracket.final1 : "Finalist";
+      showToast(`🏆 ${winner} crowned WOSS BedWars Champions!`);
+    }
+
+    function updateCmdPreview() {
+      const type = document.getElementById("cmdType").value;
+      const target = document.getElementById("cmdTarget").value.trim() || "Player";
+      const preview = document.getElementById("cmdPreview");
+
+      if (type === "whitelist") preview.innerText = `/whitelist add ${target}`;
+      if (type === "teleport") preview.innerText = `/tp ${target} ~ ~ ~`;
+      if (type === "gamerule") preview.innerText = `/gamerule keepInventory true`;
+      if (type === "coreprotect") preview.innerText = `/co rollback u:${target} t:1h r:20`;
+    }
+
+    function copyGeneratedCmd() {
+      const cmd = document.getElementById("cmdPreview").innerText;
+      navigator.clipboard.writeText(cmd).then(() => {
+        showToast(`Copied: ${cmd}`);
+      });
+    }
+
+    function broadcastPost(title, content, tag, tagName) {
+      const newPost = {
+        title,
+        tag,
+        tagName,
+        author: `${sessionStorage.getItem("woss_admin_user")} (${sessionStorage.getItem("woss_admin_role")})`,
+        date: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
+        pinned: true,
+        content
+      };
+
+      if (db) {
+        db.ref("announcements").push(newPost).then(() => {
+          showToast("Published to homepage feed via Cloud!");
+        });
+      } else {
+        try {
+          let list = JSON.parse(localStorage.getItem("woss_announcements") || "[]");
+          newPost.id = "post_" + Date.now();
+          list.unshift(newPost);
+          localStorage.setItem("woss_announcements", JSON.stringify(list));
+          showToast("Published locally.");
+        } catch(e) {}
+      }
+    }
+
+    function showToast(msg) {
+      const toast = document.getElementById("chat-toast");
+      document.getElementById("toastMsg").innerText = msg;
+      toast.classList.add("active");
+      setTimeout(() => toast.classList.remove("active"), 3500);
+    }
+
+    function escapeHTML(str) {
+      if (!str) return "";
+      return String(str).replace(/[&<>'"]/g, tag => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[tag] || tag));
+    }
+
+    initFirebase();
+    checkAuth();
+  </script>
+</body>
+</html>

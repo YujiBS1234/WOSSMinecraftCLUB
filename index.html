@@ -1,0 +1,1332 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>WOSS Minecraft Guild | White Oaks Secondary School</title>
+  
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Press+Start+2P&family=VT323&display=swap" rel="stylesheet">
+
+  <!-- Firebase SDK for Cloud Sync (Shared Config with Admin) -->
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+
+  <style>
+    :root {
+      --bg-dark: #0a0d14;
+      --bg-surface: #121824;
+      --bg-surface-elevated: #1a2332;
+      --mc-green: #48bb28;
+      --mc-green-glow: rgba(72, 187, 40, 0.4);
+      --mc-diamond: #4deeea;
+      --mc-gold: #f59e0b;
+      --mc-red: #ef4444;
+      --discord: #5865F2;
+      --classroom-green: #10b981;
+      --text-main: #f8fafc;
+      --text-muted: #94a3b8;
+      --border-subtle: rgba(255, 255, 255, 0.08);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    input, textarea, select {
+      user-select: text !important;
+      -webkit-user-select: text !important;
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      background-color: var(--bg-dark);
+      color: var(--text-main);
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      overflow-x: hidden;
+      min-height: 100vh;
+      position: relative;
+    }
+
+    #ambient-canvas {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: 1;
+    }
+
+    .container {
+      max-width: 1180px;
+      margin: 0 auto;
+      padding: 0 1.5rem;
+      position: relative;
+      z-index: 10;
+    }
+
+    .pixel-title {
+      font-family: 'Press Start 2P', monospace;
+      letter-spacing: -0.5px;
+      text-transform: uppercase;
+      line-height: 1.4;
+    }
+
+    /* Minecraft Buttons */
+    .mc-btn {
+      cursor: pointer;
+      font-family: 'Press Start 2P', monospace;
+      font-size: 0.68rem;
+      color: #fff;
+      background: #3b424a;
+      padding: 0.75rem 1.2rem;
+      border: none;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      text-shadow: 2px 2px 0px #181b20;
+      box-shadow: inset 3px 3px 0px #636d7a, inset -3px -3px 0px #1a1e24, 0 4px 0px #090b0e;
+      transition: all 0.08s ease;
+      border-radius: 2px;
+    }
+
+    .mc-btn:hover {
+      background: #464f59;
+      transform: translateY(-2px);
+      box-shadow: inset 3px 3px 0px #7b8696, inset -3px -3px 0px #1a1e24, 0 6px 0px #090b0e;
+    }
+
+    .mc-btn:active {
+      transform: translateY(3px);
+      box-shadow: inset -3px -3px 0px #636d7a, inset 3px 3px 0px #1a1e24, 0 1px 0px #090b0e;
+    }
+
+    .mc-btn.green {
+      background: #2b7a1c;
+      box-shadow: inset 3px 3px 0px #4ec734, inset -3px -3px 0px #16460d, 0 4px 0px #090b0e;
+    }
+    .mc-btn.green:hover { background: #338f22; }
+
+    .mc-btn.discord {
+      background: var(--discord);
+      box-shadow: inset 3px 3px 0px #828cf7, inset -3px -3px 0px #2c3587, 0 4px 0px #090b0e;
+    }
+
+    .mc-btn.gold {
+      background: #b45309;
+      box-shadow: inset 3px 3px 0px #f59e0b, inset -3px -3px 0px #78350f, 0 4px 0px #090b0e;
+    }
+
+    .mc-btn.red {
+      background: #991b1b;
+      box-shadow: inset 3px 3px 0px #ef4444, inset -3px -3px 0px #450a0a, 0 4px 0px #090b0e;
+    }
+
+    /* Header */
+    header {
+      position: sticky;
+      top: 0;
+      background: rgba(10, 13, 20, 0.95);
+      backdrop-filter: blur(12px);
+      border-bottom: 2px solid var(--border-subtle);
+      z-index: 1000;
+    }
+
+    nav {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0.85rem 0;
+    }
+
+    .logo-area {
+      display: flex;
+      align-items: center;
+      gap: 0.8rem;
+      text-decoration: none;
+    }
+
+    .logo-badge {
+      width: 32px;
+      height: 32px;
+      background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><rect width="16" height="16" fill="%23855c38"/><rect width="16" height="5" fill="%2348bb28"/><rect y="5" width="3" height="3" fill="%233a8c1f"/><rect x="6" y="5" width="4" height="2" fill="%233a8c1f"/><rect x="13" y="5" width="3" height="3" fill="%233a8c1f"/></svg>');
+      background-size: cover;
+      image-rendering: pixelated;
+      filter: drop-shadow(0 0 6px var(--mc-green-glow));
+    }
+
+    .logo-text {
+      color: #fff;
+      font-size: 0.88rem;
+    }
+
+    .logo-text span {
+      color: var(--mc-diamond);
+      display: block;
+      font-size: 0.65rem;
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    .nav-items {
+      display: flex;
+      align-items: center;
+      gap: 1.4rem;
+      list-style: none;
+    }
+
+    .nav-items a {
+      color: var(--text-muted);
+      text-decoration: none;
+      font-size: 0.85rem;
+      font-weight: 600;
+      transition: color 0.2s;
+    }
+
+    .nav-items a:hover { color: #fff; }
+
+    /* Hero */
+    .hero {
+      padding: 4.5rem 0 3rem;
+      display: grid;
+      grid-template-columns: 1.25fr 0.75fr;
+      align-items: center;
+      gap: 3rem;
+    }
+
+    .school-tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      background: rgba(77, 238, 234, 0.08);
+      border: 1px solid rgba(77, 238, 234, 0.25);
+      color: var(--mc-diamond);
+      padding: 0.35rem 0.85rem;
+      font-size: 0.75rem;
+      font-weight: 700;
+      border-radius: 4px;
+      margin-bottom: 1.2rem;
+      text-transform: uppercase;
+    }
+
+    .hero h1 {
+      font-size: 2.5rem;
+      color: #fff;
+      margin-bottom: 1.2rem;
+      text-shadow: 0 4px 16px rgba(0,0,0,0.8);
+    }
+
+    .hero p {
+      font-size: 1.05rem;
+      color: var(--text-muted);
+      line-height: 1.7;
+      margin-bottom: 2rem;
+      max-width: 580px;
+    }
+
+    .hero-btn-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1rem;
+      margin-bottom: 2rem;
+    }
+
+    /* 3D Cube */
+    .cube-container {
+      perspective: 1000px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .cube-stage {
+      width: 140px;
+      height: 140px;
+      position: relative;
+      transform-style: preserve-3d;
+      animation: rotateCube 16s infinite linear;
+    }
+
+    @keyframes rotateCube {
+      0% { transform: rotateX(-22deg) rotateY(0deg); }
+      100% { transform: rotateX(-22deg) rotateY(360deg); }
+    }
+
+    .face {
+      position: absolute;
+      width: 140px;
+      height: 140px;
+      border: 1px solid rgba(0,0,0,0.3);
+      image-rendering: pixelated;
+    }
+
+    .face.front  { transform: rotateY(0deg) translateZ(70px); background: #855c38; border-top: 18px solid #48bb28; }
+    .face.back   { transform: rotateY(180deg) translateZ(70px); background: #855c38; border-top: 18px solid #48bb28; }
+    .face.right  { transform: rotateY(90deg) translateZ(70px); background: #855c38; border-top: 18px solid #48bb28; }
+    .face.left   { transform: rotateY(-90deg) translateZ(70px); background: #855c38; border-top: 18px solid #48bb28; }
+    .face.top    { transform: rotateX(90deg) translateZ(70px); background: #55c830; }
+    .face.bottom { transform: rotateX(-90deg) translateZ(70px); background: #624328; }
+
+    .cube-shadow {
+      width: 130px;
+      height: 25px;
+      background: radial-gradient(ellipse at center, rgba(0,0,0,0.6) 0%, transparent 70%);
+      margin-top: 45px;
+    }
+
+    /* Announcements Section */
+    .announcements-section {
+      padding: 4rem 0 2rem;
+    }
+
+    .board-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+      flex-wrap: wrap;
+      gap: 1rem;
+      border-bottom: 2px solid var(--border-subtle);
+      padding-bottom: 1.2rem;
+      margin-bottom: 2rem;
+    }
+
+    .board-controls {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      flex-wrap: wrap;
+    }
+
+    .admin-indicator {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      padding: 0.45rem 0.8rem;
+      border-radius: 4px;
+      font-size: 0.75rem;
+      font-weight: 700;
+      background: rgba(245, 158, 11, 0.15);
+      border: 1px solid var(--mc-gold);
+      color: var(--mc-gold);
+    }
+
+    .announcement-feed {
+      display: grid;
+      gap: 1.2rem;
+    }
+
+    .announcement-card {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-subtle);
+      border-radius: 8px;
+      padding: 1.5rem;
+      position: relative;
+    }
+
+    .announcement-card.pinned {
+      border-color: rgba(77, 238, 234, 0.4);
+      background: linear-gradient(180deg, rgba(20, 27, 40, 0.95), var(--bg-surface));
+    }
+
+    .post-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 0.6rem;
+    }
+
+    .post-badge {
+      font-size: 0.7rem;
+      font-weight: 800;
+      padding: 0.25rem 0.6rem;
+      border-radius: 4px;
+      text-transform: uppercase;
+    }
+
+    .badge-event { background: rgba(245, 158, 11, 0.2); color: var(--mc-gold); }
+    .badge-update { background: rgba(77, 238, 234, 0.2); color: var(--mc-diamond); }
+    .badge-urgent { background: rgba(239, 68, 68, 0.2); color: var(--mc-red); }
+
+    .post-meta {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+    }
+
+    .post-title {
+      font-size: 1.25rem;
+      font-weight: 700;
+      margin-bottom: 0.6rem;
+      color: #fff;
+    }
+
+    .post-content {
+      color: #cbd5e1;
+      font-size: 0.95rem;
+      line-height: 1.6;
+    }
+
+    .delete-post-btn {
+      background: transparent;
+      border: 1px solid rgba(239, 68, 68, 0.4);
+      color: var(--mc-red);
+      padding: 0.3rem 0.6rem;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 0.75rem;
+    }
+    .delete-post-btn:hover { background: rgba(239, 68, 68, 0.2); }
+
+    /* Modals */
+    .modal-backdrop {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background: rgba(0, 0, 0, 0.85);
+      backdrop-filter: blur(8px);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 999999;
+      padding: 1.5rem;
+    }
+
+    .modal-box {
+      background: #0d121c;
+      border: 2px solid #283347;
+      width: 100%;
+      max-width: 520px;
+      border-radius: 10px;
+      box-shadow: 0 20px 50px rgba(0,0,0,0.9);
+      overflow: hidden;
+      position: relative;
+    }
+
+    .modal-bar {
+      background: #172131;
+      padding: 0.9rem 1.2rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid #283347;
+    }
+
+    .modal-close-btn {
+      background: none;
+      border: none;
+      color: var(--text-muted);
+      font-size: 1.6rem;
+      cursor: pointer;
+      line-height: 1;
+    }
+    .modal-close-btn:hover { color: #fff; }
+
+    .modal-content {
+      padding: 1.8rem;
+    }
+
+    .form-group {
+      margin-bottom: 1.2rem;
+    }
+
+    .form-group label {
+      display: block;
+      font-size: 0.82rem;
+      font-weight: 700;
+      color: var(--mc-diamond);
+      margin-bottom: 0.4rem;
+      text-transform: uppercase;
+    }
+
+    .admin-input {
+      width: 100%;
+      background: #06080d;
+      border: 1px solid #293448;
+      color: #fff;
+      font-family: inherit;
+      padding: 0.85rem;
+      border-radius: 4px;
+      font-size: 1rem;
+      outline: none;
+    }
+    .admin-input:focus { border-color: var(--mc-green); }
+
+    /* Quick Cards */
+    .quick-tiles {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+      gap: 1.5rem;
+      margin: 2rem 0 4rem;
+    }
+
+    .tile-card {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-subtle);
+      border-radius: 12px;
+      padding: 1.6rem;
+      position: relative;
+    }
+    .tile-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 4px;
+      height: 100%;
+    }
+    .tile-card.discord-card::before { background: var(--discord); }
+    .tile-card.classroom-card::before { background: var(--classroom-green); }
+    .tile-card.server-card::before { background: var(--mc-diamond); }
+
+    .interactive-pill {
+      background: #090c12;
+      border: 1px solid #242c38;
+      border-radius: 6px;
+      padding: 0.5rem 0.8rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-top: 1rem;
+    }
+    .interactive-pill code { font-size: 1.1rem; font-weight: 700; color: #fff; }
+
+    .copy-pill-btn {
+      background: transparent;
+      border: 1px solid rgba(255,255,255,0.15);
+      color: var(--text-muted);
+      font-size: 0.75rem;
+      padding: 0.35rem 0.7rem;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    .copy-pill-btn:hover { background: rgba(255,255,255,0.1); color: #fff; }
+
+    /* Toast */
+    #chat-toast {
+      position: fixed;
+      bottom: 25px;
+      left: 25px;
+      background: rgba(0, 0, 0, 0.95);
+      border-left: 4px solid var(--mc-green);
+      color: #fff;
+      padding: 0.9rem 1.4rem;
+      font-family: 'VT323', monospace;
+      font-size: 1.35rem;
+      border-radius: 4px;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+      z-index: 9999999;
+      transform: translateY(150%);
+      transition: transform 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+    #chat-toast.active { transform: translateY(0); }
+
+    footer {
+      background: #090b10;
+      padding: 2.5rem 0;
+      text-align: center;
+      border-top: 1px solid var(--border-subtle);
+      color: var(--text-muted);
+      font-size: 0.85rem;
+    }
+
+    @media (max-width: 860px) {
+      .hero { grid-template-columns: 1fr; text-align: center; }
+      .hero p { margin: 0 auto 2rem; }
+      .hero-btn-row { justify-content: center; }
+      .nav-items { display: none; }
+    }
+  </style>
+</head>
+<body>
+
+  <canvas id="ambient-canvas"></canvas>
+
+  <!-- ================= TOP HUD NAV ================= -->
+  <header>
+    <div class="container">
+      <nav>
+        <a href="#" class="logo-area" onclick="triggerAudio('wood')">
+          <div class="logo-badge"></div>
+          <div class="logo-text pixel-title">
+            WOSS CRAFTERS
+            <span>White Oaks Secondary</span>
+          </div>
+        </a>
+
+        <ul class="nav-items">
+          <li><a href="#announcements" onclick="triggerAudio('click')">Announcements</a></li>
+          <li><a href="#connect" onclick="triggerAudio('click')">Discord & Classroom</a></li>
+          <li><a href="#whitelist" onclick="triggerAudio('click')">Whitelist</a></li>
+        </ul>
+
+        <div style="display:flex; align-items:center; gap:0.6rem;">
+          <!-- Staff Portal Links -->
+          <a href="admin.html" id="navStaffBtn" class="mc-btn gold" style="padding: 0.55rem 0.9rem; font-size: 0.62rem;">
+            🔑 STAFF LOGIN
+          </a>
+          <a href="admin.html" id="navAdminPanelBtn" class="mc-btn gold" style="display:none; padding: 0.55rem 0.9rem; font-size: 0.62rem;">
+            ⚙️ STAFF CONSOLE
+          </a>
+          
+          <a href="#whitelist" class="mc-btn green" style="padding: 0.55rem 0.9rem; font-size: 0.62rem;" onclick="triggerAudio('pop')">
+            JOIN SMP
+          </a>
+        </div>
+      </nav>
+    </div>
+  </header>
+
+  <main class="container">
+
+    <!-- ================= HERO ================= -->
+    <section class="hero">
+      <div>
+        <div class="school-tag">🏛️ Oakville, Ontario • White Oaks Secondary</div>
+        <h1 class="pixel-title">MINECRAFT GUILD & SMP</h1>
+        <p>
+          The official hub for WOSS Minecraft survivalists, architects, and redstone engineers. Join the SMP server, take part in BedWars matches, and collaborate on school-wide campus projects.
+        </p>
+        <div class="hero-btn-row">
+          <a href="https://discord.gg/jx3VNFyru" target="_blank" rel="noopener noreferrer" class="mc-btn discord" onclick="triggerAudio('pop')">
+            Join WOSS Discord
+          </a>
+          <a href="#announcements" class="mc-btn gold" onclick="triggerAudio('wood')">
+            Announcements 📜
+          </a>
+        </div>
+      </div>
+
+      <div class="cube-container">
+        <div class="cube-stage">
+          <div class="face front"></div>
+          <div class="face back"></div>
+          <div class="face right"></div>
+          <div class="face left"></div>
+          <div class="face top"></div>
+          <div class="face bottom"></div>
+        </div>
+        <div class="cube-shadow"></div>
+      </div>
+    </section>
+
+    <!-- ================= ANNOUNCEMENTS SECTION ================= -->
+    <section id="announcements" class="announcements-section">
+      <div class="board-header">
+        <div>
+          <h2 class="pixel-title" style="font-size: 1.4rem; margin-bottom: 0.4rem;">EXECUTIVE DISPATCHES</h2>
+          <p style="color:var(--text-muted); font-size:0.9rem;">Official updates from the WOSS Club Leadership & Teacher Advisors</p>
+        </div>
+
+        <div class="board-controls">
+          <div id="adminBadge" style="display:none;" class="admin-indicator">
+            <span>🛡️</span> <span id="opUserLabel">OPERATOR MODE</span>
+          </div>
+          <button id="postTriggerBtn" class="mc-btn green" style="display:none;" onclick="openPostModal()">
+            ➕ NEW POST
+          </button>
+          <a href="admin.html" id="adminPortalBtn" class="mc-btn gold" style="display:none;">
+            ⚙️ MANAGE ACCOUNTS
+          </a>
+          <a href="admin.html" id="loginTriggerBtn" class="mc-btn gold">
+            🔑 STAFF LOGIN
+          </a>
+          <button id="logoutTriggerBtn" class="mc-btn red" style="display:none;" onclick="logoutAdmin()">
+            LOGOUT
+          </button>
+        </div>
+      </div>
+
+      <div class="announcement-feed" id="announcementFeed">
+        <!-- Injected dynamically -->
+      </div>
+    </section>
+
+    <!-- ================= THREE PILLARS TILES ================= -->
+    <section id="connect" class="quick-tiles">
+      <div class="tile-card classroom-card">
+        <div style="font-size:0.75rem; font-weight:700; color:var(--classroom-green); text-transform:uppercase;">Official Classroom</div>
+        <h3 style="font-size:1.25rem; margin:0.4rem 0;">Code: <span id="classroom-code-display">4q5coqr4</span></h3>
+        <p style="color:var(--text-muted); font-size:0.88rem;">Weekly meeting dates, room schedules, and official school club announcements.</p>
+        <div class="interactive-pill">
+          <code id="classroom-code-pill">4q5coqr4</code>
+          <button class="copy-pill-btn" id="classroom-copy-btn" onclick="copyClassroomCode()">
+            📋 Copy Code
+          </button>
+        </div>
+        <button id="editClassroomBtn" class="mc-btn gold" style="display:none; width:100%; margin-top:1rem; font-size:0.5rem;" onclick="openCodeModal()">
+          ⚙️ CHANGE CODE
+        </button>
+      </div>
+
+      <div class="tile-card discord-card">
+        <div style="font-size:0.75rem; font-weight:700; color:var(--discord); text-transform:uppercase;">Discord Guild</div>
+        <h3 style="font-size:1.25rem; margin:0.4rem 0;">WOSS Discord Hub</h3>
+        <p style="color:var(--text-muted); font-size:0.88rem;">Voice channels, SMP coordination, and direct support with club executives.</p>
+        <div class="interactive-pill">
+          <code style="font-size:0.9rem; color:var(--discord);">discord.gg/jx3VNFyru</code>
+          <a href="https://discord.gg/jx3VNFyru" target="_blank" class="copy-pill-btn" style="text-decoration:none;" onclick="triggerAudio('pop')">
+            🔗 Join
+          </a>
+        </div>
+      </div>
+
+      <div class="tile-card server-card">
+        <div style="font-size:0.75rem; font-weight:700; color:var(--mc-diamond); text-transform:uppercase;">Minecraft SMP</div>
+        <h3 style="font-size:1.25rem; margin:0.4rem 0;">mc.wossgaming.ca</h3>
+        <p style="color:var(--text-muted); font-size:0.88rem;">Vanilla+ survival realm with CoreProtect anti-griefing and student towns.</p>
+        <div class="interactive-pill">
+          <code>mc.wossgaming.ca</code>
+          <button class="copy-pill-btn" onclick="copyValue('mc.wossgaming.ca', 'Server IP copied!')">
+            📋 Copy IP
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= CLEAN WHITELIST FORM ================= -->
+    <section id="whitelist" style="padding-bottom: 5rem;">
+      <div style="max-width: 600px; margin: 0 auto; background: var(--bg-surface); padding: 2rem; border-radius: 8px; border: 1px solid var(--border-subtle);">
+        <h3 class="pixel-title" style="font-size:1.15rem; margin-bottom: 0.5rem; text-align: center;">APPLY FOR WHITELIST</h3>
+        <p style="text-align: center; color: var(--text-muted); font-size: 0.9rem; margin-bottom: 1.5rem;">Join with your exact Minecraft In-Game Name</p>
+        <form onsubmit="handleWhitelist(event)">
+          <div class="form-group">
+            <label>Full Name</label>
+            <input type="text" id="wName" class="admin-input" placeholder="e.g. Liam Smith" required>
+          </div>
+          <div class="form-group">
+            <label>HDSB Student Email</label>
+            <input type="email" id="wEmail" class="admin-input" placeholder="student@hdsb.ca" required>
+          </div>
+          <div class="form-group">
+            <label>Minecraft Username (Gamertag)</label>
+            <input type="text" id="wIgn" class="admin-input" placeholder="Exact IGN" required>
+          </div>
+          <button type="submit" class="mc-btn green" style="width: 100%;">SUBMIT REGISTRATION</button>
+        </form>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- ================= MODAL: POST ANNOUNCEMENT ================= -->
+  <div class="modal-backdrop" id="postModal">
+    <div class="modal-box">
+      <div class="modal-bar">
+        <span class="pixel-title" style="font-size: 0.72rem; color: var(--mc-diamond);">BROADCAST ANNOUNCEMENT</span>
+        <button class="modal-close-btn" type="button" onclick="closePostModal()">&times;</button>
+      </div>
+      <div class="modal-content">
+        <form onsubmit="handleCreatePost(event)">
+          <div class="form-group">
+            <label>Headline</label>
+            <input type="text" id="postTitle" class="admin-input" placeholder="e.g. Nether Raid Night" required>
+          </div>
+          <div style="display:grid; grid-template-columns: 1fr 1fr; gap:1rem;">
+            <div class="form-group">
+              <label>Tag</label>
+              <select id="postTag" class="admin-input">
+                <option value="badge-event">EVENT 🏆</option>
+                <option value="badge-update">UPDATE ⚙️</option>
+                <option value="badge-urgent">URGENT 🚨</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Author / Role</label>
+              <input type="text" id="postAuthor" class="admin-input" placeholder="e.g. Exec Alex" required>
+            </div>
+          </div>
+          <div class="form-group">
+            <label>Announcement Details</label>
+            <textarea id="postContent" class="admin-input" rows="4" placeholder="Write full details..." required></textarea>
+          </div>
+          <div class="form-group" style="display: flex; align-items:center; gap:0.5rem;">
+            <input type="checkbox" id="postPin" style="cursor:pointer; width:16px; height:16px;">
+            <label for="postPin" style="margin-bottom:0; cursor:pointer;">Pin to top of feed</label>
+          </div>
+          <div style="display:flex; justify-content: flex-end; gap:0.8rem; margin-top: 1.5rem;">
+            <button type="button" class="mc-btn" onclick="closePostModal()">CANCEL</button>
+            <button type="submit" class="mc-btn green">PUBLISH 📢</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <footer>
+    <div class="container">
+      <p style="font-weight: 700; color: #fff;">White Oaks Secondary School Minecraft Club</p>
+      <p style="margin-top: 0.3rem;">Classroom: <strong>4q5coqr4</strong> • Discord: <strong>discord.gg/jx3VNFyru</strong></p>
+    </div>
+  </footer>
+
+  <!-- Toast Notification -->
+  <div id="chat-toast">
+    <span style="color:var(--mc-diamond);">&lt;Server&gt;</span> <span id="toastMsg">Ready</span>
+  </div>
+
+  <!-- ================= SCRIPTS ================= -->
+  <script>
+    /* =========================================================
+       SHARED FIREBASE CONFIG (Matches admin.html)
+       ========================================================= */
+    const firebaseConfig = {
+      apiKey: "AIzaSyAvCra6Bz-PHPKCvzoBIPUQdyxBwlaswc8",
+      authDomain: "wossminecraftclub.firebaseapp.com",
+      databaseURL: "https://wossminecraftclub-default-rtdb.firebaseio.com",
+      projectId: "wossminecraftclub",
+      storageBucket: "wossminecraftclub.firebasestorage.app",
+      messagingSenderId: "710204964330",
+      appId: "1:710204964330:web:202ea82b4676eaca040693",
+      measurementId: "G-NEC5DNS4D7"
+    };
+
+    let db = null;
+    let firebaseReady = false;
+    try {
+      if (typeof firebase !== 'undefined') {
+        firebase.initializeApp(firebaseConfig);
+        db = firebase.database();
+        firebaseReady = true;
+        console.log("[WOSS Cloud] Firebase connected!");
+      }
+    } catch(err) {
+      console.warn("[WOSS Cloud] Offline mode:", err.message);
+    }
+
+    /* =========================================================
+       SHARED CLUB DATA (Synced via Firebase + localStorage)
+       ========================================================= */
+    const defaultClubData = {
+      classroomCode: "4q5coqr4",
+      discordInvite: "https://discord.gg/jx3VNFyru",
+      serverIP: "mc.wossgaming.ca",
+      serverName: "WOSS SMP Realm"
+    };
+
+    let clubData = { ...defaultClubData };
+
+    function loadClubData() {
+      if (db) {
+        db.ref("club_data").on("value", (snapshot) => {
+          const val = snapshot.val();
+          if (val) {
+            clubData = { ...defaultClubData, ...val };
+          }
+          applyClubData();
+        });
+      } else {
+        try {
+          const stored = localStorage.getItem("woss_club_data");
+          if (stored) clubData = { ...defaultClubData, ...JSON.parse(stored) };
+        } catch(e) {}
+        applyClubData();
+      }
+    }
+
+    function applyClubData() {
+      // Update classroom code displays
+      const codeDisplays = document.querySelectorAll("#classroom-code-display, #classroom-code-pill");
+      codeDisplays.forEach(el => el.textContent = clubData.classroomCode);
+      
+      // Update footer
+      const footerCode = document.querySelector("footer strong");
+      if (footerCode) footerCode.textContent = clubData.classroomCode;
+      
+      // Update Discord links
+      const discordLinks = document.querySelectorAll('a[href*="discord.gg"]');
+      discordLinks.forEach(el => el.href = clubData.discordInvite);
+    }
+
+    function saveClubData() {
+      if (db) {
+        db.ref("club_data").set(clubData);
+      } else {
+        try { localStorage.setItem("woss_club_data", JSON.stringify(clubData)); } catch(e) {}
+      }
+    }
+
+    let isAdmin = false;
+    let announcementsList = [];
+
+    const defaultAnnouncements = [
+      {
+        id: "p1",
+        title: "Welcome to the 2026/2027 WOSS Crafters Season!",
+        tag: "badge-update",
+        tagName: "UPDATE",
+        author: "Exec Team",
+        date: "Oct 14, 2026",
+        pinned: true,
+        content: "Welcome Acorns! Make sure you join the Google Classroom using code 4q5coqr4 and connect your Discord account in https://discord.gg/jx3VNFyru to prepare for our SMP launch."
+      },
+      {
+        id: "p2",
+        title: "Duo BedWars Tournament Sign-ups Open",
+        tag: "badge-event",
+        tagName: "EVENT",
+        author: "Tournament Committee",
+        date: "Oct 10, 2026",
+        pinned: false,
+        content: "Sign up with a partner on the Discord server! Matches will run after school next Thursday in Lab 204. Custom Discord champion roles are up for grabs."
+      }
+    ];
+
+    function initAnnouncements() {
+      if (db) {
+        db.ref("announcements").on("value", (snapshot) => {
+          const val = snapshot.val();
+          if (val) {
+            announcementsList = Object.keys(val).map(k => ({ id: k, ...val[k] }));
+          } else {
+            announcementsList = defaultAnnouncements;
+          }
+          renderAnnouncements();
+        }, (err) => {
+          console.warn("[Announcements] Firebase error, falling back:", err);
+          loadLocalAnnouncements();
+        });
+      } else {
+        loadLocalAnnouncements();
+      }
+    }
+
+    function loadLocalAnnouncements() {
+      try {
+        const stored = localStorage.getItem("woss_announcements");
+        announcementsList = stored ? JSON.parse(stored) : defaultAnnouncements;
+      } catch(e) {
+        announcementsList = defaultAnnouncements;
+      }
+      renderAnnouncements();
+    }
+
+    function renderAnnouncements() {
+      const feed = document.getElementById("announcementFeed");
+      if (!feed) return;
+
+      const list = [...announcementsList].sort((a, b) => (b.pinned ? 1 : 0) - (a.pinned ? 1 : 0));
+
+      feed.innerHTML = list.map(item => `
+        <div class="announcement-card ${item.pinned ? 'pinned' : ''}">
+          <div class="post-top">
+            <span class="post-badge ${item.tag}">
+              ${item.pinned ? '📌 ' : ''}${item.tagName || 'ANNOUNCEMENT'}
+            </span>
+            <div style="display:flex; align-items:center; gap:0.8rem;">
+              <span class="post-meta">${escapeHTML(item.author)} • ${escapeHTML(item.date)}</span>
+              ${isAdmin ? `<button class="delete-post-btn" onclick="deleteAnnouncement('${item.id}')">🗑️ Delete</button>` : ''}
+            </div>
+          </div>
+          <h3 class="post-title">${escapeHTML(item.title)}</h3>
+          <p class="post-content">${escapeHTML(item.content)}</p>
+        </div>
+      `).join('');
+    }
+
+    function handleCreatePost(e) {
+      e.preventDefault();
+      if (!isAdmin) return;
+
+      const title = document.getElementById("postTitle").value.trim();
+      const tagSelect = document.getElementById("postTag");
+      const tag = tagSelect.value;
+      const tagName = tagSelect.options[tagSelect.selectedIndex].text.split(" ")[0];
+      const author = document.getElementById("postAuthor").value.trim();
+      const content = document.getElementById("postContent").value.trim();
+      const pinned = document.getElementById("postPin").checked;
+
+      const newPost = {
+        title,
+        tag,
+        tagName,
+        author,
+        date: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
+        pinned,
+        content
+      };
+
+      if (db) {
+        db.ref("announcements").push(newPost).then(() => {
+          showMinecraftChat("Broadcast published across all devices! ☁️");
+        }).catch(err => {
+          console.error(err);
+          fallbackLocalPost(newPost);
+        });
+      } else {
+        fallbackLocalPost(newPost);
+      }
+
+      closePostModal();
+      document.getElementById("postTitle").value = "";
+      document.getElementById("postAuthor").value = "";
+      document.getElementById("postContent").value = "";
+      document.getElementById("postPin").checked = false;
+      triggerAudio('pop');
+    }
+
+    function fallbackLocalPost(newPost) {
+      newPost.id = "post_" + Date.now();
+      announcementsList.unshift(newPost);
+      try { localStorage.setItem("woss_announcements", JSON.stringify(announcementsList)); } catch(e){}
+      renderAnnouncements();
+      showMinecraftChat("Broadcast published locally! 💾");
+    }
+
+    function deleteAnnouncement(id) {
+      if (!isAdmin) return;
+      if (confirm("Delete this announcement?")) {
+        if (db) {
+          db.ref("announcements/" + id).remove().then(() => {
+            showMinecraftChat("Announcement deleted from cloud.");
+          }).catch(() => fallbackLocalDelete(id));
+        } else {
+          fallbackLocalDelete(id);
+        }
+        triggerAudio('pop');
+      }
+    }
+
+    function fallbackLocalDelete(id) {
+      announcementsList = announcementsList.filter(item => item.id !== id);
+      try { localStorage.setItem("woss_announcements", JSON.stringify(announcementsList)); } catch(e){}
+      renderAnnouncements();
+    }
+
+    /* Whitelist Handler (Saves to Admin review queue via Firebase) */
+    async function handleWhitelist(e) {
+      e.preventDefault();
+      const name = document.getElementById("wName").value.trim();
+      const email = document.getElementById("wEmail").value.trim();
+      const ign = document.getElementById("wIgn").value.trim();
+
+      const application = {
+        name,
+        email,
+        ign,
+        date: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
+        timestamp: Date.now()
+      };
+
+      let saved = false;
+      
+      // Try Firebase first
+      if (db) {
+        try {
+          await db.ref("whitelist_queue").push(application);
+          saved = true;
+        } catch(err) {
+          console.warn("[Whitelist] Firebase save failed, using localStorage:", err);
+        }
+      }
+      
+      // Fallback to localStorage
+      if (!saved) {
+        try {
+          let queue = JSON.parse(localStorage.getItem("woss_whitelist_queue") || "[]");
+          queue.push(application);
+          localStorage.setItem("woss_whitelist_queue", JSON.stringify(queue));
+          saved = true;
+        } catch(err) {
+          console.error("[Whitelist] Failed to save:", err);
+        }
+      }
+
+      triggerAudio('pop');
+      if (saved) {
+        showMinecraftChat(`✅ Whitelist application sent for [${ign}]! Staff will review soon.`);
+      } else {
+        showMinecraftChat(`⚠️ Application saved locally. Sync when online.`);
+      }
+      e.target.reset();
+    }
+
+    /* =========================================================
+       SECRET STAFF LOGIN (Hidden Konami-style trigger)
+       ========================================================= */
+    let secretKeySequence = [];
+    const secretCode = ['ArrowUp', 'ArrowUp', 'ArrowDown', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'ArrowLeft', 'ArrowRight', 'KeyB', 'KeyA'];
+    
+    document.addEventListener('keydown', (e) => {
+      secretKeySequence.push(e.code);
+      if (secretKeySequence.length > secretCode.length) secretKeySequence.shift();
+      if (secretKeySequence.join(',') === secretCode.join(',')) {
+        triggerAudio('pop');
+        openSecretStaffLogin();
+        secretKeySequence = [];
+      }
+    });
+
+    function openSecretStaffLogin() {
+      // Create a subtle modal for staff login
+      const modal = document.createElement('div');
+      modal.className = 'modal-backdrop';
+      modal.style.display = 'flex';
+      modal.innerHTML = `
+        <div class="modal-box" style="max-width: 420px;">
+          <div class="modal-bar">
+            <span class="pixel-title" style="font-size: 0.65rem; color: var(--mc-gold);">🔐 STAFF ACCESS TERMINAL</span>
+            <button class="modal-close-btn" onclick="this.closest('.modal-backdrop').remove()">&times;</button>
+          </div>
+          <div class="modal-content">
+            <p style="font-size:0.8rem; color:var(--text-muted); margin-bottom:1rem; text-align:center;">
+              Enter credentials to access the Executive Command Console
+            </p>
+            <form onsubmit="handleSecretLogin(event)">
+              <div class="form-group">
+                <label>Username / Role / Email</label>
+                <input type="text" id="secretUser" class="admin-input" placeholder="e.g. founder, admin, vp, tech..." required autofocus>
+              </div>
+              <div class="form-group">
+                <label>Passcode</label>
+                <input type="password" id="secretPass" class="admin-input" placeholder="••••••••••••" required>
+              </div>
+              <div style="display:flex; gap:0.5rem; margin-top:1rem;">
+                <button type="button" class="mc-btn" style="flex:1;" onclick="this.closest('.modal-backdrop').remove()">Cancel</button>
+                <button type="submit" class="mc-btn gold" style="flex:2;">AUTHENTICATE 🔓</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      `;
+      document.body.appendChild(modal);
+      document.getElementById('secretUser').focus();
+    }
+
+    async function handleSecretLogin(e) {
+      e.preventDefault();
+      const input = document.getElementById("secretUser").value.trim().toLowerCase();
+      const pass = document.getElementById("secretPass").value.trim();
+      
+      // Hash the password
+      const msgBuffer = new TextEncoder().encode(pass);
+      const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
+      const inputHash = Array.from(new Uint8Array(hashBuffer)).map(b => b.toString(16).padStart(2, '0')).join('');
+      
+      const MASTER_HASH = "a33e30362470e9d18a6b033d7b613ca16b30ba5db69f3b0a6e0805b279ddc1c2";
+      
+      // Check against known accounts (same as admin.html)
+      const accounts = [
+        { username: "founder", role: "Founder", name: "Club Founder" },
+        { username: "admin", role: "Super Admin", name: "Sponsor / Super Admin" },
+        { username: "vp", role: "Vice President", name: "Vice President" },
+        { username: "supervisor", role: "Supervisor", name: "Teacher Sponsor" },
+        { username: "events", role: "Event Coordinator", name: "Event Coordinator" },
+        { username: "social", role: "Social Media Lead", name: "Social Media Lead" },
+        { username: "logistics", role: "Logistics", name: "Logistics Officer" },
+        { username: "tech", role: "Server Tech Lead", name: "Server Tech Lead" }
+      ];
+      
+      const matched = accounts.find(acc => {
+        const u = acc.username.toLowerCase();
+        const ro = acc.role.toLowerCase();
+        return u === input || ro === input || (input === "founder" && ro.includes("founder")) || 
+               (input === "vp" && ro.includes("vice")) || (input === "tech" && ro.includes("tech")) ||
+               (input === "admin" && ro.includes("admin"));
+      });
+      
+      if (matched && (inputHash === MASTER_HASH || pass === "woss2026")) {
+        // Success - set session and redirect to admin
+        sessionStorage.setItem("woss_admin_auth", "true");
+        sessionStorage.setItem("woss_admin_user", matched.name);
+        sessionStorage.setItem("woss_admin_username", matched.username);
+        sessionStorage.setItem("woss_admin_role", matched.role);
+        
+        showMinecraftChat(`Access granted: ${matched.name} (${matched.role})`);
+        triggerAudio('pop');
+        
+        setTimeout(() => {
+          window.location.href = "admin.html";
+        }, 800);
+      } else {
+        showMinecraftChat("❌ Invalid credentials. Access denied.");
+        triggerAudio('wood');
+        document.getElementById("secretPass").value = "";
+      }
+    }
+
+    /* Modal Controls */
+    function openPostModal() {
+      triggerAudio('click');
+      const activeUser = sessionStorage.getItem("woss_admin_user") || "Executive";
+      const authorField = document.getElementById("postAuthor");
+      if (authorField && !authorField.value) {
+        authorField.value = activeUser;
+      }
+      document.getElementById("postModal").style.display = "flex";
+    }
+
+    function closePostModal() {
+      document.getElementById("postModal").style.display = "none";
+    }
+
+    window.onclick = function(e) {
+      const postModal = document.getElementById("postModal");
+      if (e.target === postModal) closePostModal();
+    };
+
+    function logoutAdmin() {
+      isAdmin = false;
+      try { 
+        sessionStorage.removeItem("woss_admin_auth");
+        sessionStorage.removeItem("woss_admin_user");
+        sessionStorage.removeItem("woss_admin_role");
+      } catch(e){}
+      updateAdminUI();
+      renderAnnouncements();
+      triggerAudio('wood');
+      showMinecraftChat("Signed out of staff session.");
+    }
+
+    function updateAdminUI() {
+      const navStaffBtn = document.getElementById("navStaffBtn");
+      const navAdminPanelBtn = document.getElementById("navAdminPanelBtn");
+      const loginBtn = document.getElementById("loginTriggerBtn");
+      const adminPortalBtn = document.getElementById("adminPortalBtn");
+      const logoutBtn = document.getElementById("logoutTriggerBtn");
+      const postBtn = document.getElementById("postTriggerBtn");
+      const badge = document.getElementById("adminBadge");
+      const opUserLabel = document.getElementById("opUserLabel");
+
+      if (isAdmin) {
+        const activeUser = sessionStorage.getItem("woss_admin_user") || "OPERATOR";
+        const activeRole = sessionStorage.getItem("woss_admin_role") || "Staff";
+        if (opUserLabel) opUserLabel.innerText = `${activeUser.toUpperCase()} (${activeRole})`;
+
+        if (navStaffBtn) navStaffBtn.style.display = "none";
+        if (navAdminPanelBtn) navAdminPanelBtn.style.display = "inline-flex";
+
+        if (loginBtn) loginBtn.style.display = "none";
+        if (adminPortalBtn) adminPortalBtn.style.display = "inline-flex";
+        if (logoutBtn) logoutBtn.style.display = "inline-flex";
+        if (postBtn) postBtn.style.display = "inline-flex";
+        if (badge) badge.style.display = "inline-flex";
+      } else {
+        if (navStaffBtn) navStaffBtn.style.display = "inline-flex";
+        if (navAdminPanelBtn) navAdminPanelBtn.style.display = "none";
+
+        if (loginBtn) loginBtn.style.display = "inline-flex";
+        if (adminPortalBtn) adminPortalBtn.style.display = "none";
+        if (logoutBtn) logoutBtn.style.display = "none";
+        if (postBtn) postBtn.style.display = "none";
+        if (badge) badge.style.display = "none";
+      }
+    }
+
+    function escapeHTML(str) {
+      if (!str) return "";
+      return String(str).replace(/[&<>'"]/g, 
+        tag => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[tag] || tag)
+      );
+    }
+
+    /* Sound Synthesizer */
+    let audioCtx = null;
+    function triggerAudio(type) {
+      try {
+        if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        const now = audioCtx.currentTime;
+
+        if (type === 'click') {
+          osc.type = 'square';
+          osc.frequency.setValueAtTime(800, now);
+          osc.frequency.exponentialRampToValueAtTime(300, now + 0.04);
+          gain.gain.setValueAtTime(0.12, now);
+          gain.gain.exponentialRampToValueAtTime(0.01, now + 0.04);
+          osc.start(now);
+          osc.stop(now + 0.04);
+        } else if (type === 'pop') {
+          osc.type = 'sine';
+          osc.frequency.setValueAtTime(340, now);
+          osc.frequency.exponentialRampToValueAtTime(880, now + 0.08);
+          gain.gain.setValueAtTime(0.2, now);
+          gain.gain.exponentialRampToValueAtTime(0.01, now + 0.08);
+          osc.start(now);
+          osc.stop(now + 0.08);
+        } else if (type === 'wood') {
+          osc.type = 'triangle';
+          osc.frequency.setValueAtTime(140, now);
+          osc.frequency.exponentialRampToValueAtTime(50, now + 0.07);
+          gain.gain.setValueAtTime(0.25, now);
+          gain.gain.exponentialRampToValueAtTime(0.01, now + 0.07);
+          osc.start(now);
+          osc.stop(now + 0.07);
+        }
+      } catch(e){}
+    }
+
+    function copyValue(text, msg) {
+      navigator.clipboard.writeText(text).then(() => {
+        triggerAudio('pop');
+        showMinecraftChat(msg);
+      }).catch(() => {
+        showMinecraftChat("Clipboard access denied");
+      });
+    }
+
+    function showMinecraftChat(msg) {
+      const toast = document.getElementById("chat-toast");
+      document.getElementById("toastMsg").innerText = msg;
+      toast.classList.add("active");
+      setTimeout(() => toast.classList.remove("active"), 3500);
+    }
+
+    /* Ambient Spore Particles */
+    try {
+      const canvas = document.getElementById("ambient-canvas");
+      const ctx = canvas.getContext("2d");
+      function resizeCanvas() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
+      window.addEventListener("resize", resizeCanvas);
+      resizeCanvas();
+
+      const particles = Array.from({length: 35}, () => ({
+        x: Math.random() * canvas.width,
+        y: Math.random() * canvas.height,
+        size: Math.random() * 2 + 1,
+        speed: Math.random() * 0.6 + 0.2,
+        color: Math.random() > 0.5 ? '#48bb28' : '#4deeea',
+        opacity: Math.random() * 0.6 + 0.2
+      }));
+
+      function anim() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        particles.forEach(p => {
+          p.y -= p.speed;
+          if (p.y < -10) p.y = canvas.height + 10;
+          ctx.fillStyle = p.color;
+          ctx.globalAlpha = p.opacity;
+          ctx.fillRect(p.x, p.y, p.size, p.size);
+        });
+        requestAnimationFrame(anim);
+      }
+      anim();
+    } catch(e){}
+
+    try {
+      if (sessionStorage.getItem("woss_admin_auth") === "true") {
+        isAdmin = true;
+      }
+    } catch(e){}
+
+    loadClubData();
+    updateAdminUI();
+    initAnnouncements();
+  </script>
+</body>
+</html>
